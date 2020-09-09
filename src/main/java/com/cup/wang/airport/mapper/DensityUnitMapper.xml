@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DensityUnitMapper">
+    <select id="getAllDensityUnit" resultType="com.cup.wang.airport.model.DensityUnit">
+        select * from density_unit;
+    </select>
+    <select id="getDensityUnitById" resultType="com.cup.wang.airport.model.DensityUnit">
+        select * from density_unit
+        where id=#{id};
+    </select>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.DensityUnit">
+        update density_unit
+        <set>
+            <if test="unit != null">
+                unit=#{unit}
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+    <insert id="insertSelective" parameterType="com.cup.wang.airport.model.DensityUnit">
+        insert into density_unit
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null">
+                id,
+            </if>
+            <if test="unit != null">
+                unit,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="unit != null">
+                #{unit},
+            </if>
+        </trim>
+    </insert>
+    <insert id="addDensityUnitAndReturnId" parameterType="com.cup.wang.airport.model.DensityUnit" useGeneratedKeys="true" keyProperty="id">
+        insert into density_unit
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="unit != null">
+                unit,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="unit != null">
+                #{unit},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete from density_unit
+        where id=#{id}
+    </delete>
+</mapper>

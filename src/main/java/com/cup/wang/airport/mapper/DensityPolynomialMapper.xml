@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DensityPolynomialMapper">
+    <resultMap id="PolynomialResultMap" type="com.cup.wang.airport.model.DensityPolynomial" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="density_id" property="densityId" jdbcType="INTEGER" />
+        <result column="x0" property="x0" jdbcType="DOUBLE" />
+        <result column="x1" property="x1" jdbcType="DOUBLE" />
+        <result column="x2" property="x2" jdbcType="DOUBLE" />
+        <result column="x3" property="x3" jdbcType="DOUBLE" />
+        <result column="x4" property="x4" jdbcType="DOUBLE" />
+        <result column="x5" property="x5" jdbcType="DOUBLE" />
+    </resultMap>
+    <parameterMap id="RelativeParameterMap" type="com.cup.wang.airport.model.DensityPolynomial">
+        <parameter property="id" resultMap="RelativeResultMap"/>
+        <parameter property="densityId" resultMap="RelativeResultMap"/>
+        <parameter property="x0" resultMap="RelativeResultMap"/>
+        <parameter property="x1" resultMap="RelativeResultMap"/>
+        <parameter property="x2" resultMap="RelativeResultMap"/>
+        <parameter property="x3" resultMap="RelativeResultMap"/>
+        <parameter property="x4" resultMap="RelativeResultMap"/>
+        <parameter property="x5" resultMap="RelativeResultMap"/>
+    </parameterMap>
+    <select id="getAllDensityPolynomials" resultMap="PolynomialResultMap">
+        select * from density_polynomial;
+    </select>
+    <select id="getDensityPolynomialById" parameterType="java.lang.Integer" resultMap="PolynomialResultMap">
+        select * from density_polynomial where id=#{id,jdbcType=INTEGER};
+    </select>
+    <update id="updateDensityPolynomial" parameterMap="RelativeParameterMap">
+        update density_polynomial
+        <set>
+            <if test="densityId != null" >
+                density_id = #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="x0 != null" >
+                x0 = #{x0,jdbcType=DOUBLE},
+            </if>
+            <if test="x1 != null" >
+                x1 = #{x1,jdbcType=DOUBLE},
+            </if>
+            <if test="x2 != null" >
+                x2 = #{x2,jdbcType=DOUBLE},
+            </if>
+            <if test="x3 != null" >
+                x3 = #{x3,jdbcType=DOUBLE},
+            </if>
+            <if test="x4 != null" >
+                x4 = #{x4,jdbcType=DOUBLE},
+            </if>
+            <if test="x5 != null" >
+                x5 = #{x5,jdbcType=DOUBLE},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+    <insert id="addDensityPolynomial" parameterMap="RelativeParameterMap" useGeneratedKeys="true" keyProperty="id">
+        insert into density_polynomial
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="densityId != null" >
+                density_id,
+            </if>
+            <if test="x0 != null" >
+                x0,
+            </if>
+            <if test="x1 != null" >
+                x1,
+            </if>
+            <if test="x2 != null" >
+                x2,
+            </if>
+            <if test="x3 != null" >
+                x3,
+            </if>
+            <if test="x4 != null" >
+                x4,
+            </if>
+            <if test="x5 != null" >
+                x5,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="densityId != null" >
+                #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="x0 != null" >
+                #{x0,jdbcType=DOUBLE},
+            </if>
+            <if test="x1 != null" >
+                #{x1,jdbcType=DOUBLE},
+            </if>
+            <if test="x2 != null" >
+                #{x2,jdbcType=DOUBLE},
+            </if>
+            <if test="x3 != null" >
+                #{x3,jdbcType=DOUBLE},
+            </if>
+            <if test="x4 != null" >
+                #{x4,jdbcType=DOUBLE},
+            </if>
+            <if test="x5 != null" >
+                #{x5,jdbcType=DOUBLE},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteDensityPolynomialById" parameterType="java.lang.Integer">
+        delete from density_polynomial
+        where id=#{id,jdbcType=INTEGER}
+    </delete>
+</mapper>

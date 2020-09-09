@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DensityFittingMapper">
+    <resultMap id="FittingResultMap" type="com.cup.wang.airport.model.DensityFitting" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="density_id" property="densityId" jdbcType="INTEGER" />
+        <result column="density" property="density" jdbcType="DOUBLE" />
+        <result column="temperature" property="temperature" jdbcType="DOUBLE" />
+    </resultMap>
+    <parameterMap id="FittingParameterMap" type="com.cup.wang.airport.model.DensityFitting">
+        <parameter property="id" resultMap="FittingResultMap"/>
+        <parameter property="densityId" resultMap="FittingResultMap"/>
+        <parameter property="density" resultMap="FittingResultMap"/>
+        <parameter property="temperature" resultMap="FittingResultMap"/>
+    </parameterMap>
+    <select id="getAllDensityFittings" resultMap="FittingResultMap">
+        select * from density_fitting;
+    </select>
+    <select id="getDensityFittingsByDensityId" resultMap="FittingResultMap" parameterType="java.lang.Integer">
+        select * from density_fitting where density_id=#{did};
+    </select>
+    <update id="updateDensityFitting" parameterMap="FittingParameterMap">
+        update density_fitting
+        <set >
+            <if test="densityId != null" >
+                density_id = #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="density != null" >
+                density = #{density,jdbcType=DOUBLE},
+            </if>
+            <if test="temperature != null" >
+                temperature = #{temperature,jdbcType=DOUBLE},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <insert id="addDensityFitting" parameterMap="FittingParameterMap" useGeneratedKeys="true" keyProperty="id">
+        insert into density_fitting
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="densityId != null" >
+                density_id,
+            </if>
+            <if test="density != null" >
+                density,
+            </if>
+            <if test="temperature != null" >
+                temperature,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="densityId != null" >
+                #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="density != null" >
+                #{density,jdbcType=DOUBLE},
+            </if>
+            <if test="temperature != null" >
+                #{temperature,jdbcType=DOUBLE},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteDensityFittingById" parameterType="java.lang.Integer">
+        delete from density_fitting
+        where id=#{id,jdbcType=INTEGER}
+    </delete>
+</mapper>

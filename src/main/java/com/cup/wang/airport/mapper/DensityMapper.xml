@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DensityMapper">
+    <!-- 使用resultMap映射实体类和字段之间的一一对应关系
+        定义结果集，column表示sql查询列,property表示映射到实体的属性
+    -->
+    <resultMap type="com.cup.wang.airport.model.Density" id="DensityResultMap">
+        <id property="id" column="id"/>
+        <result property="unit" column="unit"/>
+        <result property="liquidId" column="liquid_id"/>
+        <result property="densityConstant" column="density_constant"/>
+        <result property="densityResult" column="density_fitting"/>
+        <result property="temperatureResult" column="temperature_fitting"/>
+        <association property="densityUnit" javaType="com.cup.wang.airport.model.DensityUnit">
+            <id property="id" column="duid"/>
+            <result property="unit" column="duunit"/>
+        </association>
+        <association property="densityRelative" javaType="com.cup.wang.airport.model.DensityRelative">
+            <id property="id" column="drid"/>
+            <result property="densityId" column="drdensityId"/>
+            <result property="x1" column="drx1"/>
+            <result property="x2" column="drx2"/>
+        </association>
+        <association property="densityPolynomial" javaType="com.cup.wang.airport.model.DensityPolynomial">
+            <id property="id" column="dpid"/>
+            <result property="densityId" column="dpdensityId"/>
+            <result property="x0" column="dpx0"/>
+            <result property="x1" column="dpx1"/>
+            <result property="x2" column="dpx2"/>
+            <result property="x3" column="dpx3"/>
+            <result property="x4" column="dpx4"/>
+            <result property="x5" column="dpx5"/>
+        </association>
+        <collection property="densityFittingList" ofType="com.cup.wang.airport.model.DensityFitting">
+            <id property="id" column="dfid"/>
+            <result property="densityId" column="dfdensityId"/>
+            <result property="density" column="dfdensity"/>
+            <result property="temperature" column="dftemperature"/>
+        </collection>
+    </resultMap>
+    <select id="getAllDensities" resultMap="DensityResultMap">
+        select d.*,
+        du.id as duid,du.unit as duunit,
+        dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2,
+        dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5,
+        df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature
+        from density d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df
+        where d.unit=du.id and d.id=dr.density_id and d.id=dp.density_id and d.id=df.density_id
+        order by d.id;
+    </select>
+    <select id="getDensityById" parameterType="java.lang.Integer" resultMap="DensityResultMap">
+        select d.*,
+        du.id as duid,du.unit as duunit,
+        dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2,
+        dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5,
+        df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature
+        from density d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df
+        where d.unit=du.id and d.id=dr.density_id and d.id=dp.density_id and d.id=df.density_id and d.id=#{id}
+        order by d.id;
+    </select>
+</mapper>

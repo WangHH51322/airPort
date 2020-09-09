@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DemoMapper">
+    <!-- 使用resultMap映射实体类和字段之间的一一对应关系
+        定义结果集，column表示sql查询列,property表示映射到实体的属性
+    -->
+    <resultMap type="com.cup.wang.airport.model.Demo" id="DemoResultMap">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="style" column="style"/>
+<!--        <association property="demo1" javaType="com.cup.wang.airport.model.Demo1">-->
+<!--            <id property="id" column="d1id"/>-->
+<!--            <result property="name" column="d1name"/>-->
+<!--            <result property="style" column="d1style"/>-->
+<!--        </association>-->
+<!--        <association property="demo2" javaType="com.cup.wang.airport.model.Demo2">-->
+<!--            <id property="id" column="d2id"/>-->
+<!--            <result property="name" column="d2name"/>-->
+<!--            <result property="style" column="d2style"/>-->
+<!--        </association>-->
+<!--        <association property="demo3" javaType="com.cup.wang.airport.model.Demo3">-->
+<!--            <id property="id" column="d1id"/>-->
+<!--            <result property="name" column="d3name"/>-->
+<!--            <result property="style" column="d3style"/>-->
+<!--        </association>-->
+    </resultMap>
+    <select id="getAllDemos" resultMap="DemoResultMap" parameterType="java.lang.Integer">
+        select
+        d.id,d.name,
+        <if test="style == 1">
+            d1.id as d1id,d1.name as d1name,
+        </if>
+        <if test="style == 2">
+            d2.id as d2id,d2.name as d2name
+        </if>
+        from demo d,demo1 d1,demo2 d2
+        where d.id=#{id}
+        and d1.style=d.id
+        and d2.style=d.id
+    </select>
+</mapper>

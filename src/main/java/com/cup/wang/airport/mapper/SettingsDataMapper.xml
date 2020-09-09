@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.SettingsDataMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.SettingsData">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="variable_name" jdbcType="VARCHAR" property="variableName" />
+      <association property="type" javaType="com.cup.wang.airport.model.SettingsDataType">
+          <id property="id" column="tid"/>
+          <result property="name" column="tname"/>
+          <result property="dataId" column="tdataId"/>
+          <collection property="typeValue" ofType="com.cup.wang.airport.model.SettingsDataTypeValue">
+              <id property="id" column="vid"/>
+              <result property="value" column="vvalue"/>
+              <result property="label" column="vlabel"/>
+              <result property="typeId" column="vtypeId"/>
+              <collection property="children" ofType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+                  <id property="id" column="cid"/>
+                  <result property="name" column="cname"/>
+                  <result property="variableName" column="cvariableName"/>
+                  <result property="type" column="ctype"/>
+                  <result property="valueId" column="cvalueId"/>
+              </collection>
+          </collection>
+      </association>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, variable_name
+  </sql>
+    <select id="getAll" resultMap="BaseResultMap">
+        SELECT d.*,
+        t.id as tid,t.name as tname,t.data_id as tdataId,
+        v.id as vid,v.value as vvalue,v.label as vlabel,v.type_id as vtypeId,
+        c.id as cid,c.name as cname,c.variable_name as cvariableName,c.type as ctype,c.value_id as cvalueId
+        FROM settings_data d,
+        settings_data_type t,
+        settings_data_type_value v,
+        settings_data_type_value_children c
+        WHERE c.value_id=v.id AND v.type_id=t.id AND t.data_id=d.id
+        ORDER BY d.id
+    </select>
+</mapper>

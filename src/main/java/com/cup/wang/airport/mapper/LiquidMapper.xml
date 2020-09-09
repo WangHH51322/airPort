@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.LiquidMapper">
+    <!-- 使用resultMap映射实体类和字段之间的一一对应关系
+    定义结果集，column表示sql查询列,property表示映射到实体的属性
+-->
+    <resultMap type="com.cup.wang.airport.model.Liquid" id="LiquidResultMap">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="densityId" column="density_id"/>
+    </resultMap>
+    <select id="getLiquidById" resultMap="LiquidResultMap">
+        select * from liquid where id=#{id};
+    </select>
+    <select id="getAllLiquids" resultMap="LiquidResultMap">
+        select * from liquid;
+    </select>
+    <update id="updateLiquidById" parameterType="com.cup.wang.airport.model.Liquid">
+        update liquid set name=#{name},density_id=#{densityId} where id=#{id}
+    </update>
+    <insert id="addLiquid" parameterType="com.cup.wang.airport.model.Liquid" useGeneratedKeys="true" keyProperty="id">
+        insert into liquid
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="densityId != null" >
+                density_Id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="name != null" >
+                #{name},
+            </if>
+            <if test="densityId != null" >
+                #{densityId,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+    
+</mapper>

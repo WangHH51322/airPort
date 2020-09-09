@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.DensityRelativeMapper">
+    <resultMap id="RelativeResultMap" type="com.cup.wang.airport.model.DensityRelative" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="density_id" property="densityId" jdbcType="INTEGER" />
+        <result column="x1" property="x1" jdbcType="DOUBLE" />
+        <result column="x2" property="x2" jdbcType="DOUBLE" />
+    </resultMap>
+    <parameterMap id="RelativeParameterMap" type="com.cup.wang.airport.model.DensityRelative">
+        <parameter property="id" resultMap="RelativeResultMap"/>
+        <parameter property="densityId" resultMap="RelativeResultMap"/>
+        <parameter property="x1" resultMap="RelativeResultMap"/>
+        <parameter property="x2" resultMap="RelativeResultMap"/>
+    </parameterMap>
+    <select id="getAllDensityRelatives" resultMap="RelativeResultMap">
+        select * from density_relative;
+    </select>
+    <select id="getDensityRelativeById" resultMap="RelativeResultMap" parameterType="java.lang.Integer">
+        select * from density_relative where id=#{id,jdbcType=INTEGER};
+    </select>
+    <update id="updateDensityRelative" parameterMap="RelativeParameterMap">
+        update density_relative
+        <set >
+            <if test="densityId != null" >
+                density_id = #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="x1 != null" >
+                x1 = #{x1,jdbcType=DOUBLE},
+            </if>
+            <if test="x2 != null" >
+                x2 = #{x2,jdbcType=DOUBLE},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <insert id="addDensityRelative" parameterMap="RelativeParameterMap" useGeneratedKeys="true" keyProperty="id">
+        insert into density_relative
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="densityId != null" >
+                density_id,
+            </if>
+            <if test="x1 != null" >
+                x1,
+            </if>
+            <if test="x2 != null" >
+                x2,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="densityId != null" >
+                #{densityId,jdbcType=INTEGER},
+            </if>
+            <if test="x1 != null" >
+                #{x1,jdbcType=DOUBLE},
+            </if>
+            <if test="x2 != null" >
+                #{x2,jdbcType=DOUBLE},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteDensityRelativeById" parameterType="java.lang.Integer">
+        delete from density_relative
+        where id=#{id,jdbcType=INTEGER}
+    </delete>
+</mapper>
