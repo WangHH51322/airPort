@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.PhysicalQuantityMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.PhysicalQuantity">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="unit_name_iso" jdbcType="VARCHAR" property="unitNameIso" />
+    <result column="symbol" jdbcType="VARCHAR" property="symbol" />
+    <result column="quantity_name" jdbcType="VARCHAR" property="quantityName" />
+    <result column="english_name" jdbcType="VARCHAR" property="englishName" />
+    <result column="unit_symbol_iso" jdbcType="VARCHAR" property="unitSymbolIso" />
+      <collection property="quantityUnits" ofType="com.cup.wang.airport.model.QuantityUnit">
+          <id property="id" column="quid"/>
+          <result property="unitName" column="quUnitName"/>
+          <result property="englishName" column="quEnglishName"/>
+          <result property="symbol" column="quSymbol"/>
+          <result property="factorA" column="quFactorA"/>
+          <result property="factorB" column="quFactorB"/>
+          <result property="unitSystemId" column="quUnitSystemId"/>
+          <result property="physicalQuantityId" column="quPhysicalQuantityId"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, unit_name_iso, symbol, quantity_name, english_name, unit_symbol_iso
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select pq.*,
+    qu.id as quid,qu.unit_name as quUnitName,qu.english_name as quEnglishName,qu.symbol as quSymbol,qu.factor_a as quFactorA,qu.factor_b as quFactorB,
+    qu.unit_system_id as quUnitSystemId,qu.physical_quantity_id as  quPhysicalQuantityId
+    from physical_quantity pq , quantity_unit qu
+    where pq.id = #{id,jdbcType=INTEGER}
+    and qu.physical_quantity_id = pq.id
+  </select>
+    <select id="getAllPhysicalQuantity" resultMap="BaseResultMap">
+        select pq.*,
+        qu.id as quid,qu.unit_name as quUnitName,qu.english_name as quEnglishName,qu.symbol as quSymbol,qu.factor_a as quFactorA,qu.factor_b as quFactorB,
+        qu.unit_system_id as quUnitSystemId,qu.physical_quantity_id as  quPhysicalQuantityId
+        from physical_quantity pq , quantity_unit qu
+        where qu.physical_quantity_id = pq.id
+    </select>
+    <select id="getAllPhysicalQuantitySimple" resultMap="BaseResultMap">
+        select *
+        from physical_quantity
+    </select>
+    <select id="getSimplePhysicalQuantityById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select *
+    from physical_quantity
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from physical_quantity
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+    insert into physical_quantity (id, unit_name_iso, symbol, 
+      quantity_name, english_name, unit_symbol_iso
+      )
+    values (#{id,jdbcType=INTEGER}, #{unitNameIso,jdbcType=VARCHAR}, #{symbol,jdbcType=VARCHAR}, 
+      #{quantityName,jdbcType=VARCHAR}, #{englishName,jdbcType=VARCHAR}, #{unitSymbolIso,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+    insert into physical_quantity
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="unitNameIso != null">
+        unit_name_iso,
+      </if>
+      <if test="symbol != null">
+        symbol,
+      </if>
+      <if test="quantityName != null">
+        quantity_name,
+      </if>
+      <if test="englishName != null">
+        english_name,
+      </if>
+      <if test="unitSymbolIso != null">
+        unit_symbol_iso,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="unitNameIso != null">
+        #{unitNameIso,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="quantityName != null">
+        #{quantityName,jdbcType=VARCHAR},
+      </if>
+      <if test="englishName != null">
+        #{englishName,jdbcType=VARCHAR},
+      </if>
+      <if test="unitSymbolIso != null">
+        #{unitSymbolIso,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+    update physical_quantity
+    <set>
+      <if test="unitNameIso != null">
+        unit_name_iso = #{unitNameIso,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        symbol = #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="quantityName != null">
+        quantity_name = #{quantityName,jdbcType=VARCHAR},
+      </if>
+      <if test="englishName != null">
+        english_name = #{englishName,jdbcType=VARCHAR},
+      </if>
+      <if test="unitSymbolIso != null">
+        unit_symbol_iso = #{unitSymbolIso,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+    update physical_quantity
+    set unit_name_iso = #{unitNameIso,jdbcType=VARCHAR},
+      symbol = #{symbol,jdbcType=VARCHAR},
+      quantity_name = #{quantityName,jdbcType=VARCHAR},
+      english_name = #{englishName,jdbcType=VARCHAR},
+      unit_symbol_iso = #{unitSymbolIso,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

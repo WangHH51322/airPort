@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.QuantityUnitMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.QuantityUnit">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="unit_name" jdbcType="VARCHAR" property="unitName" />
+    <result column="chinese_name" jdbcType="VARCHAR" property="chineseName" />
+    <result column="english_name" jdbcType="VARCHAR" property="englishName" />
+    <result column="symbol" jdbcType="VARCHAR" property="symbol" />
+    <result column="factor_a" jdbcType="DOUBLE" property="factorA" />
+    <result column="factor_b" jdbcType="DOUBLE" property="factorB" />
+    <result column="unit_system_id" jdbcType="INTEGER" property="unitSystemId" />
+    <result column="physical_quantity_id" jdbcType="INTEGER" property="physicalQuantityId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, unit_name, chinese_name, english_name, symbol, factor_a, factor_b, unit_system_id, physical_quantity_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from quantity_unit
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllQuantityUnit" resultMap="BaseResultMap">
+        select * from quantity_unit;
+    </select>
+    <select id="getQuantityUnitByPhysicalQuantityId" resultMap="BaseResultMap">
+        select * from quantity_unit
+        where physical_quantity_id = #{id,jdbcType=INTEGER};
+    </select>
+    <select id="getQuantityUnitByPhysicalQuantityIdAndUnitSystemId" resultMap="BaseResultMap">
+        select * from quantity_unit
+        where physical_quantity_id = #{id1,jdbcType=INTEGER}
+        <if test="id2 != null and id2 != '' ">
+            and unit_system_id = #{id2};
+        </if>
+
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from quantity_unit
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.QuantityUnit">
+    insert into quantity_unit (id, unit_name, english_name, 
+      symbol, factor_a, factor_b, 
+      unit_system_id, physical_quantity_id)
+    values (#{id,jdbcType=INTEGER}, #{unitName,jdbcType=VARCHAR}, #{englishName,jdbcType=VARCHAR}, 
+      #{symbol,jdbcType=VARCHAR}, #{factorA,jdbcType=DOUBLE}, #{factorB,jdbcType=DOUBLE}, 
+      #{unitSystemId,jdbcType=INTEGER}, #{physicalQuantityId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.QuantityUnit">
+    insert into quantity_unit
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="unitName != null">
+        unit_name,
+      </if>
+      <if test="englishName != null">
+        english_name,
+      </if>
+        <if test="chineseName != null">
+            chinese_name,
+      </if>
+      <if test="symbol != null">
+        symbol,
+      </if>
+      <if test="factorA != null">
+        factor_a,
+      </if>
+      <if test="factorB != null">
+        factor_b,
+      </if>
+      <if test="unitSystemId != null">
+        unit_system_id,
+      </if>
+      <if test="physicalQuantityId != null">
+        physical_quantity_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="unitName != null">
+        #{unitName,jdbcType=VARCHAR},
+      </if>
+      <if test="englishName != null">
+        #{englishName,jdbcType=VARCHAR},
+      </if>
+        <if test="chineseName != null">
+        #{chineseName,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="factorA != null">
+        #{factorA,jdbcType=DOUBLE},
+      </if>
+      <if test="factorB != null">
+        #{factorB,jdbcType=DOUBLE},
+      </if>
+      <if test="unitSystemId != null">
+        #{unitSystemId,jdbcType=INTEGER},
+      </if>
+      <if test="physicalQuantityId != null">
+        #{physicalQuantityId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.QuantityUnit">
+    update quantity_unit
+    <set>
+      <if test="unitName != null">
+        unit_name = #{unitName,jdbcType=VARCHAR},
+      </if>
+        <if test="chineseName != null">
+            chinese_name = #{chineseName,jdbcType=VARCHAR},
+        </if>
+      <if test="englishName != null">
+        english_name = #{englishName,jdbcType=VARCHAR},
+      </if>
+      <if test="symbol != null">
+        symbol = #{symbol,jdbcType=VARCHAR},
+      </if>
+      <if test="factorA != null">
+        factor_a = #{factorA,jdbcType=DOUBLE},
+      </if>
+      <if test="factorB != null">
+        factor_b = #{factorB,jdbcType=DOUBLE},
+      </if>
+      <if test="unitSystemId != null">
+        unit_system_id = #{unitSystemId,jdbcType=INTEGER},
+      </if>
+      <if test="physicalQuantityId != null">
+        physical_quantity_id = #{physicalQuantityId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.QuantityUnit">
+    update quantity_unit
+    set unit_name = #{unitName,jdbcType=VARCHAR},
+      english_name = #{englishName,jdbcType=VARCHAR},
+      chinese_name = #{chineseName,jdbcType=VARCHAR},
+      symbol = #{symbol,jdbcType=VARCHAR},
+      factor_a = #{factorA,jdbcType=DOUBLE},
+      factor_b = #{factorB,jdbcType=DOUBLE},
+      unit_system_id = #{unitSystemId,jdbcType=INTEGER},
+      physical_quantity_id = #{physicalQuantityId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

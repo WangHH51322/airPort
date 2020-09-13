@@ -8,29 +8,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
  * @author Qing
  * @version 1.0
- * @date 2020/8/19 20:59
+ * @date 2020/9/3 17:45
  */
 @RestController
-@RequestMapping("/management/liquid/density")
+@RequestMapping("/management/liquid/density/test")
 public class DensityController {
 
     @Autowired
-    DensityService densityService;
-
-    @GetMapping("/")
-    public List<Density> getAllDensities(){
-        return densityService.getAllDensities();
-    }
+    DensityService densityTestService;
 
     @GetMapping("/{id}")
     public Density getDensityById(@PathVariable Integer id){
-        return densityService.getDensityById(id);
+        return densityTestService.getDensityById(id);
     }
-
-
 }

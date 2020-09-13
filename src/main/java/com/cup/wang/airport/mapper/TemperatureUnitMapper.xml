@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.cup.wang.airport.mapper.TemperatureUnitMapper">
-    <select id="findAllTemperatureUnit" resultType="com.cup.wang.airport.model.TemperatureUnit">
-        select * from temperature_unit;
-    </select>
-</mapper>

@@ -1,63 +1,166 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.DensityMapper">
-    <!-- 使用resultMap映射实体类和字段之间的一一对应关系
-        定义结果集，column表示sql查询列,property表示映射到实体的属性
-    -->
-    <resultMap type="com.cup.wang.airport.model.Density" id="DensityResultMap">
-        <id property="id" column="id"/>
-        <result property="unit" column="unit"/>
-        <result property="liquidId" column="liquid_id"/>
-        <result property="densityConstant" column="density_constant"/>
-        <result property="densityResult" column="density_fitting"/>
-        <result property="temperatureResult" column="temperature_fitting"/>
-        <association property="densityUnit" javaType="com.cup.wang.airport.model.DensityUnit">
-            <id property="id" column="duid"/>
-            <result property="unit" column="duunit"/>
-        </association>
-        <association property="densityRelative" javaType="com.cup.wang.airport.model.DensityRelative">
-            <id property="id" column="drid"/>
-            <result property="densityId" column="drdensityId"/>
-            <result property="x1" column="drx1"/>
-            <result property="x2" column="drx2"/>
-        </association>
-        <association property="densityPolynomial" javaType="com.cup.wang.airport.model.DensityPolynomial">
-            <id property="id" column="dpid"/>
-            <result property="densityId" column="dpdensityId"/>
-            <result property="x0" column="dpx0"/>
-            <result property="x1" column="dpx1"/>
-            <result property="x2" column="dpx2"/>
-            <result property="x3" column="dpx3"/>
-            <result property="x4" column="dpx4"/>
-            <result property="x5" column="dpx5"/>
-        </association>
-        <collection property="densityFittingList" ofType="com.cup.wang.airport.model.DensityFitting">
-            <id property="id" column="dfid"/>
-            <result property="densityId" column="dfdensityId"/>
-            <result property="density" column="dfdensity"/>
-            <result property="temperature" column="dftemperature"/>
-        </collection>
-    </resultMap>
-    <select id="getAllDensities" resultMap="DensityResultMap">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Density">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="density_unit_id" jdbcType="INTEGER" property="densityUnitId" />
+    <result column="density_value_id" jdbcType="INTEGER" property="densityValueId" />
+    <result column="liquid_id" jdbcType="INTEGER" property="liquidId" />
+      <association property="densityUnit" javaType="com.cup.wang.airport.model.DensityUnit">
+          <id property="id" column="duid"/>
+          <result property="unit" column="duunit"/>
+      </association>
+      <association property="densityConstant" javaType="com.cup.wang.airport.model.DensityConstant">
+          <id property="id" column="dcid"/>
+          <result property="value" column="dcvalue"/>
+          <result property="densityId" column="dcdensityId"/>
+      </association>
+      <association property="densityRelative" javaType="com.cup.wang.airport.model.DensityRelative">
+          <id property="id" column="drid"/>
+          <result property="densityId" column="drdensityId"/>
+          <result property="x1" column="drx1"/>
+          <result property="x2" column="drx2"/>
+      </association>
+      <association property="densityPolynomial" javaType="com.cup.wang.airport.model.DensityPolynomial">
+          <id property="id" column="dpid"/>
+          <result property="densityId" column="dpdensityId"/>
+          <result property="x0" column="dpx0"/>
+          <result property="x1" column="dpx1"/>
+          <result property="x2" column="dpx2"/>
+          <result property="x3" column="dpx3"/>
+          <result property="x4" column="dpx4"/>
+          <result property="x5" column="dpx5"/>
+      </association>
+      <collection property="densityFittingList" ofType="com.cup.wang.airport.model.DensityFitting">
+          <id property="id" column="dfid"/>
+          <result property="densityId" column="dfdensityId"/>
+          <result property="density" column="dfdensity"/>
+          <result property="temperature" column="dftemperature"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, density_unit_id, density_value_id, liquid_id
+  </sql>
+    <select id="selectByKey" resultMap="BaseResultMap">
         select d.*,
         du.id as duid,du.unit as duunit,
-        dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2,
-        dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5,
-        df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature
-        from density d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df
-        where d.unit=du.id and d.id=dr.density_id and d.id=dp.density_id and d.id=df.density_id
+        <if test="densityValueId == 1">
+            dc.id as dcid,dc.value as dcvalue,dc.density_id as dcdensityId
+        </if>
+        <if test="densityValueId == 2">
+            df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature
+        </if>
+        <if test="densityValueId == 3">
+            dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5
+        </if>
+        <if test="densityValueId == 4">
+            dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2
+        </if>
+        from density_test d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df,density_constant dc
+        where d.density_unit_id=du.id and d.id=#{id}
+        <if test="densityValueId == 1">
+            and d.id=dc.density_id
+        </if>
+        <if test="densityValueId == 2">
+            and d.id=df.density_id
+        </if>
+        <if test="densityValueId == 3">
+            and d.id=dp.density_id
+        </if>
+        <if test="densityValueId == 4">
+            and d.id=dr.density_id
+        </if>
         order by d.id;
     </select>
-    <select id="getDensityById" parameterType="java.lang.Integer" resultMap="DensityResultMap">
+    <select id="selectByKey2" resultMap="BaseResultMap">
         select d.*,
         du.id as duid,du.unit as duunit,
-        dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2,
-        dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5,
-        df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature
-        from density d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df
-        where d.unit=du.id and d.id=dr.density_id and d.id=dp.density_id and d.id=df.density_id and d.id=#{id}
+        dc.id as dcid,dc.value as dcvalue,dc.density_id as dcdensityId,
+            df.id as dfid,df.density_id as dfdensityId,df.density as dfdensity,df.temperature as dftemperature,
+            dp.id as dpid,dp.density_id as dpdensityId,dp.x0 as dpx0,dp.x1 as dpx1,dp.x2 as dpx2,dp.x3 as dpx3,dp.x4 as dpx4,dp.x5 as dpx5,
+            dr.id as drid,dr.density_id as drdensityId,dr.x1 as drx1,dr.x2 as drx2
+        from density_test d,density_unit du,density_relative dr,density_polynomial dp,density_fitting df,density_constant dc
+        where d.density_unit_id=du.id and d.id=#{id}
+            and d.id=dc.density_id
+            and d.id=df.density_id
+            and d.id=dp.density_id
+            and d.id=dr.density_id
         order by d.id;
     </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select *
+        from density_test
+        where density_test.id=#{id}
+    </select>
+    <select id="selectConstantByKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select d.*,
+        du.id as duid,du.unit as duunit,
+        dc.id as dcid,dc.value as dcvalue,dc.density_id as dcdensityId
+        from density_test d,density_unit du,density_constant dc
+        where d.density_unit_id=du.id and d.id=dc.density_id and d.id=#{id}
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from density_test
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.Density">
+    insert into density_test (id, density_unit_id, density_value_id, 
+      liquid_id)
+    values (#{id,jdbcType=INTEGER}, #{densityUnitId,jdbcType=INTEGER}, #{densityValueId,jdbcType=INTEGER}, 
+      #{liquidId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Density">
+    insert into density_test
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="densityUnitId != null">
+        density_unit_id,
+      </if>
+      <if test="densityValueId != null">
+        density_value_id,
+      </if>
+      <if test="liquidId != null">
+        liquid_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="densityUnitId != null">
+        #{densityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="densityValueId != null">
+        #{densityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        #{liquidId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Density">
+    update density_test
+    <set>
+      <if test="densityUnitId != null">
+        density_unit_id = #{densityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="densityValueId != null">
+        density_value_id = #{densityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        liquid_id = #{liquidId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Density">
+    update density_test
+    set density_unit_id = #{densityUnitId,jdbcType=INTEGER},
+      density_value_id = #{densityValueId,jdbcType=INTEGER},
+      liquid_id = #{liquidId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
 </mapper>

@@ -28,7 +28,4 @@ public class ProjectUnit {
 
     private DensityUnit densityUnit;
 
-    private ViscosityKinematicUnit viscosityKinematicUnit;
-
-    private ViscosityDynamicUnit viscosityDynamicUnit;
 }

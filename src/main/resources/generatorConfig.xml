@@ -57,7 +57,7 @@
 
         <!-- JDBC连接配置 -->
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://localhost:3306/wang"
+                        connectionURL="jdbc:mysql://localhost:3306/wang_last"
                         userId="root"
                         password="newpassword">
             <property name="nullCatalogMeansCurrent" value="true" />
@@ -94,7 +94,7 @@
             targetProject:目标项目,指定一个存在的目录下,生成的内容会放到指定目录中,如果目录不存在,MBG不会自动建目录
         -->
         <javaModelGenerator targetPackage="com.cup.wang.airport.model"
-                            targetProject="D:\wang\project\airport\src\main\java">
+                            targetProject="D:\wang\project\air\src\main\java">
 
             <!-- 自动为每一个生成的类创建一个构造方法,构造方法包含了所有的field,而不是使用setter -->
             <!--<property name="constructorBased" value="false"/>-->
@@ -128,7 +128,7 @@
             targetPackage/targetProject:同javaModelGenerator
         -->
         <sqlMapGenerator targetPackage="com.cup.wang.airport.mapper"
-                         targetProject="D:\wang\project\airport\src\main\java">
+                         targetProject="D:\wang\project\air\src\main\java">
             <!-- 在targetPackage的基础上,根据数据库的schema再生成一层package,最终生成的类放在这个package下,默认为false -->
             <property name="enableSubPackages" value="false"/>
         </sqlMapGenerator>
@@ -144,7 +144,7 @@
             注意,如果context是MyBatis3Simple:只支持ANNOTATEDMAPPER和XMLMAPPER
         -->
         <javaClientGenerator type="XMLMAPPER" targetPackage="com.cup.wang.airport.mapper"
-                             targetProject="D:\wang\project\airport\src\main\java">
+                             targetProject="D:\wang\project\air\src\main\java">
             <!-- 在targetPackage的基础上,根据数据库的schema再生成一层package,最终生成的类放在这个package下,默认为false -->
             <property name="enableSubPackages" value="false"/>
 
@@ -195,7 +195,7 @@
         -->
         <!--如果tableName=“%”，则默认生成此表单下所有表格的mapper和.xml
         如果只想生成单表的mapper和.xml只需要将其修改为MySql中对应的表名即可-->
-        <table tableName="project_unit"
+        <table tableName="quantity_unit"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false"

@@ -1,16 +1,25 @@
 package com.cup.wang.airport.mapper;
 
 import com.cup.wang.airport.model.Density;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-/**
- * @author Qing
- * @version 1.0
- * @date 2020/8/19 20:59
- */
 public interface DensityMapper {
-    List<Density> getAllDensities();
+    int deleteByPrimaryKey(Integer id);
 
-    Density getDensityById(Integer id);
+    int insert(Density record);
+
+    int insertSelective(Density record);
+
+    Density selectByPrimaryKey(Integer integer);
+
+    int updateByPrimaryKeySelective(Density record);
+
+    int updateByPrimaryKey(Density record);
+
+    List<Density> selectByKey(@Param("id") Integer id, @Param("densityValueId")Integer densityValueId);
+    List<Density> selectByKey2(@Param("id") Integer id, @Param("densityValueId")Integer densityValueId);
+
+    Density selectConstantByKey(Integer id);
 }

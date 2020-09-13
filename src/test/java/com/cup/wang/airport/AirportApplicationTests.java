@@ -11,9 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class AirportApplicationTests {
 
     @Autowired
-    DemoMapper demoMapper;
-    @Autowired
-    DensityTestMapper densityTestMapper;
+    DensityMapper densityTestMapper;
 
     @Autowired
     private DensityFittingService densityFittingService;

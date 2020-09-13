@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.UnitSystemMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.UnitSystem">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="system_name" jdbcType="VARCHAR" property="systemName" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+      <collection property="quantityUnits" ofType="com.cup.wang.airport.model.QuantityUnit">
+          <id property="id" column="quid"/>
+          <result property="unitName" column="quUnitName"/>
+          <result property="englishName" column="quEnglishName"/>
+          <result property="symbol" column="quSymbol"/>
+          <result property="factorA" column="quFactorA"/>
+          <result property="factorB" column="quFactorB"/>
+          <result property="unitSystemId" column="quUnitSystemId"/>
+          <result property="physicalQuantityId" column="quPhysicalQuantityId"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, system_name, description
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from unit_system
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAll" resultMap="BaseResultMap">
+        select us.*,
+        qu.id as quid,qu.unit_name as quUnitName,qu.english_name as quEnglishName,qu.symbol as quSymbol,qu.factor_a as quFactorA,qu.factor_b as quFactorB,
+        qu.unit_system_id as quUnitSystemId,qu.physical_quantity_id as quPhysicalQuantityId
+        from unit_system us,quantity_unit qu
+        where qu.unit_system_id = us.id
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from unit_system
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.UnitSystem">
+    insert into unit_system (id, system_name, description
+      )
+    values (#{id,jdbcType=INTEGER}, #{systemName,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.UnitSystem">
+    insert into unit_system
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="systemName != null">
+        system_name,
+      </if>
+      <if test="description != null">
+        description,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="systemName != null">
+        #{systemName,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        #{description,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.UnitSystem">
+    update unit_system
+    <set>
+      <if test="systemName != null">
+        system_name = #{systemName,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.UnitSystem">
+    update unit_system
+    set system_name = #{systemName,jdbcType=VARCHAR},
+      description = #{description,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
