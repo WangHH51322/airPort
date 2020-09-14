@@ -35,6 +35,11 @@ public class QuantityUnitController {
         return quantityUnitService.getQuantityUnitByPhysicalQuantityId(id);
     }
 
+    @GetMapping("/physicalQuantity/unitSystem/{id}")
+    public List<QuantityUnit> getQuantityUnitByUnitSystemId(@PathVariable Integer id){
+        return quantityUnitService.getQuantityUnitByUnitSystemId(id);
+    }
+
     @GetMapping("/physicalQuantity/")
     public List<QuantityUnit> getQuantityUnitByPhysicalQuantityIdAndUnitSystemId(Integer id1,Integer id2)
     {

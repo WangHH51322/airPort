@@ -22,11 +22,16 @@
     where id = #{id,jdbcType=INTEGER}
   </select>
     <select id="getAllQuantityUnit" resultMap="BaseResultMap">
-        select * from quantity_unit;
+        select * from quantity_unit order by physical_quantity_id;
     </select>
-    <select id="getQuantityUnitByPhysicalQuantityId" resultMap="BaseResultMap">
+    <select id="getQuantityUnitByPhysicalQuantityId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
         select * from quantity_unit
         where physical_quantity_id = #{id,jdbcType=INTEGER};
+    </select>
+    <select id="getQuantityUnitByUnitSystemId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select * from quantity_unit
+        where unit_system_id = #{id,jdbcType=INTEGER}
+        order by physical_quantity_id;
     </select>
     <select id="getQuantityUnitByPhysicalQuantityIdAndUnitSystemId" resultMap="BaseResultMap">
         select * from quantity_unit
@@ -34,8 +39,8 @@
         <if test="id2 != null and id2 != '' ">
             and unit_system_id = #{id2};
         </if>
-
     </select>
+
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from quantity_unit
     where id = #{id,jdbcType=INTEGER}

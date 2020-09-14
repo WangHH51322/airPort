@@ -3,43 +3,38 @@
 <mapper namespace="com.cup.wang.airport.mapper.ProjectUnitMapper">
   <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.ProjectUnit">
     <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="project_variable" jdbcType="VARCHAR" property="projectVariable" />
+    <result column="variable_name" jdbcType="VARCHAR" property="variableName" />
+    <result column="variable_unit_id" jdbcType="INTEGER" property="variableUnitId" />
+    <result column="variable_unit_type" jdbcType="INTEGER" property="variableUnitType" />
     <result column="project_id" jdbcType="INTEGER" property="projectId" />
-    <result column="density_unit_id" jdbcType="INTEGER" property="densityUnitId" />
-    <result column="viscosity_kinematic_unit_id" jdbcType="INTEGER" property="viscosityKinematicUnitId" />
-    <result column="viscosity_dynamic_unit_id" jdbcType="INTEGER" property="viscosityDynamicUnitId" />
-    <result column="length_unit_id" jdbcType="INTEGER" property="lengthUnitId" />
-    <result column="diameter_unit_id" jdbcType="INTEGER" property="diameterUnitId" />
-    <result column="wall_thickness_unit_id" jdbcType="INTEGER" property="wallThicknessUnitId" />
-    <result column="roughness_unit_id" jdbcType="INTEGER" property="roughnessUnitId" />
-      <association property="densityUnit" javaType="com.cup.wang.airport.model.DensityUnit">
-          <id property="id" column="did"/>
-          <result property="unit" column="dunit"/>
-      </association>
   </resultMap>
   <sql id="Base_Column_List">
-    id, project_id, density_unit_id,
-    length_unit_id, diameter_unit_id, wall_thickness_unit_id, roughness_unit_id
+    id, project_variable, variable_name, variable_unit_id, variable_unit_type, project_id
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select pu.*,
-    du.id as did , du.unit as dunit,
-    from project_unit pu , density_unit du
-    where pu.project_id = #{id,jdbcType=INTEGER}
-    and pu.density_unit_id = du.id
+    select 
+    <include refid="Base_Column_List" />
+    from project_unit
+    where id = #{id,jdbcType=INTEGER}
   </select>
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    <select id="getProjectUnitByProjectId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from project_unit
+        where project_id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from project_unit
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" parameterType="com.cup.wang.airport.model.ProjectUnit">
-    insert into project_unit (id, project_id, density_unit_id, 
-      viscosity_kinematic_unit_id, viscosity_dynamic_unit_id, 
-      length_unit_id, diameter_unit_id, wall_thickness_unit_id, 
-      roughness_unit_id)
-    values (#{id,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}, #{densityUnitId,jdbcType=INTEGER}, 
-      #{viscosityKinematicUnitId,jdbcType=INTEGER}, #{viscosityDynamicUnitId,jdbcType=INTEGER}, 
-      #{lengthUnitId,jdbcType=INTEGER}, #{diameterUnitId,jdbcType=INTEGER}, #{wallThicknessUnitId,jdbcType=INTEGER}, 
-      #{roughnessUnitId,jdbcType=INTEGER})
+    insert into project_unit (id, project_variable, variable_name, 
+      variable_unit_id, variable_unit_type, project_id
+      )
+    values (#{id,jdbcType=INTEGER}, #{projectVariable,jdbcType=VARCHAR}, #{variableName,jdbcType=VARCHAR}, 
+      #{variableUnitId,jdbcType=INTEGER}, #{variableUnitType,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}
+      )
   </insert>
   <insert id="insertSelective" parameterType="com.cup.wang.airport.model.ProjectUnit">
     insert into project_unit
@@ -47,101 +42,71 @@
       <if test="id != null">
         id,
       </if>
+      <if test="projectVariable != null">
+        project_variable,
+      </if>
+      <if test="variableName != null">
+        variable_name,
+      </if>
+      <if test="variableUnitId != null">
+        variable_unit_id,
+      </if>
+      <if test="variableUnitType != null">
+        variable_unit_type,
+      </if>
       <if test="projectId != null">
         project_id,
-      </if>
-      <if test="densityUnitId != null">
-        density_unit_id,
-      </if>
-      <if test="viscosityKinematicUnitId != null">
-        viscosity_kinematic_unit_id,
-      </if>
-      <if test="viscosityDynamicUnitId != null">
-        viscosity_dynamic_unit_id,
-      </if>
-      <if test="lengthUnitId != null">
-        length_unit_id,
-      </if>
-      <if test="diameterUnitId != null">
-        diameter_unit_id,
-      </if>
-      <if test="wallThicknessUnitId != null">
-        wall_thickness_unit_id,
-      </if>
-      <if test="roughnessUnitId != null">
-        roughness_unit_id,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
         #{id,jdbcType=INTEGER},
       </if>
+      <if test="projectVariable != null">
+        #{projectVariable,jdbcType=VARCHAR},
+      </if>
+      <if test="variableName != null">
+        #{variableName,jdbcType=VARCHAR},
+      </if>
+      <if test="variableUnitId != null">
+        #{variableUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="variableUnitType != null">
+        #{variableUnitType,jdbcType=INTEGER},
+      </if>
       <if test="projectId != null">
         #{projectId,jdbcType=INTEGER},
-      </if>
-      <if test="densityUnitId != null">
-        #{densityUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="viscosityKinematicUnitId != null">
-        #{viscosityKinematicUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="viscosityDynamicUnitId != null">
-        #{viscosityDynamicUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="lengthUnitId != null">
-        #{lengthUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="diameterUnitId != null">
-        #{diameterUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="wallThicknessUnitId != null">
-        #{wallThicknessUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="roughnessUnitId != null">
-        #{roughnessUnitId,jdbcType=INTEGER},
       </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.ProjectUnit">
     update project_unit
     <set>
+      <if test="projectVariable != null">
+        project_variable = #{projectVariable,jdbcType=VARCHAR},
+      </if>
+      <if test="variableName != null">
+        variable_name = #{variableName,jdbcType=VARCHAR},
+      </if>
+      <if test="variableUnitId != null">
+        variable_unit_id = #{variableUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="variableUnitType != null">
+        variable_unit_type = #{variableUnitType,jdbcType=INTEGER},
+      </if>
       <if test="projectId != null">
         project_id = #{projectId,jdbcType=INTEGER},
-      </if>
-      <if test="densityUnitId != null">
-        density_unit_id = #{densityUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="viscosityKinematicUnitId != null">
-        viscosity_kinematic_unit_id = #{viscosityKinematicUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="viscosityDynamicUnitId != null">
-        viscosity_dynamic_unit_id = #{viscosityDynamicUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="lengthUnitId != null">
-        length_unit_id = #{lengthUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="diameterUnitId != null">
-        diameter_unit_id = #{diameterUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="wallThicknessUnitId != null">
-        wall_thickness_unit_id = #{wallThicknessUnitId,jdbcType=INTEGER},
-      </if>
-      <if test="roughnessUnitId != null">
-        roughness_unit_id = #{roughnessUnitId,jdbcType=INTEGER},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.ProjectUnit">
     update project_unit
-    set project_id = #{projectId,jdbcType=INTEGER},
-      density_unit_id = #{densityUnitId,jdbcType=INTEGER},
-      viscosity_kinematic_unit_id = #{viscosityKinematicUnitId,jdbcType=INTEGER},
-      viscosity_dynamic_unit_id = #{viscosityDynamicUnitId,jdbcType=INTEGER},
-      length_unit_id = #{lengthUnitId,jdbcType=INTEGER},
-      diameter_unit_id = #{diameterUnitId,jdbcType=INTEGER},
-      wall_thickness_unit_id = #{wallThicknessUnitId,jdbcType=INTEGER},
-      roughness_unit_id = #{roughnessUnitId,jdbcType=INTEGER}
+    set project_variable = #{projectVariable,jdbcType=VARCHAR},
+      variable_name = #{variableName,jdbcType=VARCHAR},
+      variable_unit_id = #{variableUnitId,jdbcType=INTEGER},
+      variable_unit_type = #{variableUnitType,jdbcType=INTEGER},
+      project_id = #{projectId,jdbcType=INTEGER}
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>

@@ -10,22 +10,14 @@ import lombok.NoArgsConstructor;
 public class ProjectUnit {
     private Integer id;
 
+    private String projectVariable;
+
+    private String variableName;
+
+    private Integer variableUnitId;
+
+    private Integer variableUnitType;
+
     private Integer projectId;
-
-    private Integer densityUnitId;
-
-    private Integer viscosityKinematicUnitId;
-
-    private Integer viscosityDynamicUnitId;
-
-    private Integer lengthUnitId;
-
-    private Integer diameterUnitId;
-
-    private Integer wallThicknessUnitId;
-
-    private Integer roughnessUnitId;
-
-    private DensityUnit densityUnit;
 
 }

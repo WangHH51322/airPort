@@ -23,4 +23,6 @@ public interface QuantityUnitMapper {
     List<QuantityUnit> getQuantityUnitByPhysicalQuantityId(Integer id);
 
     List<QuantityUnit> getQuantityUnitByPhysicalQuantityIdAndUnitSystemId(@Param("id1") Integer id1,@Param("id2") Integer id2);
+
+    List<QuantityUnit> getQuantityUnitByUnitSystemId(Integer id);
 }

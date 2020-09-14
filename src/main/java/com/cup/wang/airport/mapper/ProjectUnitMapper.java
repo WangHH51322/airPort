@@ -2,6 +2,8 @@ package com.cup.wang.airport.mapper;
 
 import com.cup.wang.airport.model.ProjectUnit;
 
+import java.util.List;
+
 public interface ProjectUnitMapper {
     int deleteByPrimaryKey(Integer id);
 
@@ -14,4 +16,6 @@ public interface ProjectUnitMapper {
     int updateByPrimaryKeySelective(ProjectUnit record);
 
     int updateByPrimaryKey(ProjectUnit record);
+
+    List<ProjectUnit> getProjectUnitByProjectId(Integer id);
 }

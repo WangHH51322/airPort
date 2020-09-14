@@ -195,7 +195,7 @@
         -->
         <!--如果tableName=“%”，则默认生成此表单下所有表格的mapper和.xml
         如果只想生成单表的mapper和.xml只需要将其修改为MySql中对应的表名即可-->
-        <table tableName="quantity_unit"
+        <table tableName="project_unit"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableDeleteByExample="false"

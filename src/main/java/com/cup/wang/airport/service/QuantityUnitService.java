@@ -45,4 +45,8 @@ public class QuantityUnitService {
     public List<QuantityUnit> getQuantityUnitByPhysicalQuantityIdAndUnitSystemId(Integer id1, Integer id2) {
         return quantityUnitMapper.getQuantityUnitByPhysicalQuantityIdAndUnitSystemId(id1,id2);
     }
+
+    public List<QuantityUnit> getQuantityUnitByUnitSystemId(Integer id) {
+        return quantityUnitMapper.getQuantityUnitByUnitSystemId(id);
+    }
 }
