@@ -11,16 +11,10 @@ import java.util.List;
 @NoArgsConstructor
 public class PhysicalQuantity {
     private Integer id;
-
     private String unitNameIso;
-
     private String symbol;
-
     private String quantityName;
-
     private String englishName;
-
     private String unitSymbolIso;
-
     private List<QuantityUnit> quantityUnits;
 }
