@@ -35,14 +35,7 @@ public class DensityFittingService {
 
 
     public Integer addDensityFitting(DensityFitting densityFitting) {
-        try {
-            Integer integer = densityFittingMapper.addDensityFitting(densityFitting);
-            return integer;
-        } catch (Exception e1) {
-            return 0;
-        } finally {
-            return 0;
-        }
+        return densityFittingMapper.addDensityFitting(densityFitting);
     }
 
     public Integer deleteDensityFittingById(Integer id) {

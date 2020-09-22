@@ -20,4 +20,16 @@ public class DensityService {
         Integer densityValueId = densityTestMapper.selectByPrimaryKey(id).getDensityValueId();
         return densityTestMapper.selectByKey(id,densityValueId).get(0);
     }
+
+    public int updateDensity(Density density) {
+        return densityTestMapper.updateByPrimaryKeySelective(density);
+    }
+
+    public int addDensity(Density density) {
+        return densityTestMapper.insertSelective(density);
+    }
+
+    public int deleteDensityById(Integer id) {
+        return densityTestMapper.deleteByPrimaryKey(id);
+    }
 }
