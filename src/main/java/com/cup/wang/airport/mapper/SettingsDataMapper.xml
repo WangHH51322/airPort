@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.SettingsDataMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.SettingsData">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.settingsData.SettingsData">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="variable_name" jdbcType="VARCHAR" property="variableName" />
-      <association property="type" javaType="com.cup.wang.airport.model.SettingsDataType">
+      <association property="type" javaType="com.cup.wang.airport.model.settingsData.SettingsDataType">
           <id property="id" column="tid"/>
           <result property="name" column="tname"/>
           <result property="dataId" column="tdataId"/>
-          <collection property="typeValue" ofType="com.cup.wang.airport.model.SettingsDataTypeValue">
+          <collection property="typeValue" ofType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
               <id property="id" column="vid"/>
               <result property="value" column="vvalue"/>
               <result property="label" column="vlabel"/>
               <result property="typeId" column="vtypeId"/>
-              <collection property="children" ofType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+              <collection property="children" ofType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
                   <id property="id" column="cid"/>
                   <result property="name" column="cname"/>
                   <result property="variableName" column="cvariableName"/>

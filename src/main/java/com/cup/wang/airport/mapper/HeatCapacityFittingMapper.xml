@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.HeatCapacityFittingMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="heat_capacity_id" jdbcType="INTEGER" property="heatCapacityId" />
+    <result column="heat_capacity" jdbcType="DOUBLE" property="heatCapacity" />
+    <result column="vapor" jdbcType="DOUBLE" property="vapor" />
+    <result column="temperature" jdbcType="DOUBLE" property="temperature" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, heat_capacity_id, heat_capacity, vapor, temperature
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from heat_capacity_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllHeatCapacityFittings" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from heat_capacity_fitting
+    </select>
+    <select id="getHeatCapacityFittingsByHCId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from heat_capacity_fitting
+        where heat_capacity_id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from heat_capacity_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting">
+    insert into heat_capacity_fitting (id, heat_capacity_id, heat_capacity, 
+      vapor, temperature)
+    values (#{id,jdbcType=INTEGER}, #{heatCapacityId,jdbcType=INTEGER}, #{heatCapacity,jdbcType=DOUBLE}, 
+      #{vapor,jdbcType=DOUBLE}, #{temperature,jdbcType=DOUBLE})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting">
+    insert into heat_capacity_fitting
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="heatCapacityId != null">
+        heat_capacity_id,
+      </if>
+      <if test="heatCapacity != null">
+        heat_capacity,
+      </if>
+      <if test="vapor != null">
+        vapor,
+      </if>
+      <if test="temperature != null">
+        temperature,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacityId != null">
+        #{heatCapacityId,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacity != null">
+        #{heatCapacity,jdbcType=DOUBLE},
+      </if>
+      <if test="vapor != null">
+        #{vapor,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        #{temperature,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+    <insert id="addHeatCapacityFittingsByHCId" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="heatCapacityFittings" item="item" index="index" open="" close="" separator=";">
+            insert into heat_capacity_fitting
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    id,
+                </if>
+                <if test="item.heatCapacityId != null">
+                    heat_capacity_id,
+                </if>
+                <if test="item.heatCapacity != null">
+                    heat_capacity,
+                </if>
+                <if test="item.vapor != null">
+                    vapor,
+                </if>
+                <if test="item.temperature != null">
+                    temperature,
+                </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    #{item.id,jdbcType=INTEGER},
+                </if>
+                <if test="item.heatCapacityId != null">
+                    #{item.heatCapacityId,jdbcType=INTEGER},
+                </if>
+                <if test="item.heatCapacity != null">
+                    #{item.heatCapacity,jdbcType=INTEGER},
+                </if>
+                <if test="item.vapor != null">
+                    #{item.vapor,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+        </foreach>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting" useGeneratedKeys="true" keyProperty="id">
+    update heat_capacity_fitting
+    <set>
+      <if test="heatCapacityId != null">
+        heat_capacity_id = #{heatCapacityId,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacity != null">
+        heat_capacity = #{heatCapacity,jdbcType=DOUBLE},
+      </if>
+      <if test="vapor != null">
+        vapor = #{vapor,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        temperature = #{temperature,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting">
+    update heat_capacity_fitting
+    set heat_capacity_id = #{heatCapacityId,jdbcType=INTEGER},
+      heat_capacity = #{heatCapacity,jdbcType=DOUBLE},
+      vapor = #{vapor,jdbcType=DOUBLE},
+      temperature = #{temperature,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+    <update id="updateHeatCapacityFittings" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="heatCapacityFittings" item="item" index="index" open="" close="" separator=";">
+            update
+            heat_capacity_fitting set
+            <trim prefix="" suffix=" " suffixOverrides=",">
+                <if test="item.heatCapacityId != null">
+                    heat_capacity_id = #{item.heatCapacityId,jdbcType=INTEGER},
+                </if>
+                <if test="item.heatCapacity != null">
+                    heat_capacity = #{item.heatCapacity,jdbcType=DOUBLE},
+                </if>
+                <if test="item.vapor != null">
+                    vapor = #{item.vapor,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    temperature = #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.DensityPolynomial;
+import com.cup.wang.airport.model.density.DensityPolynomial;
 
 import java.util.List;
 

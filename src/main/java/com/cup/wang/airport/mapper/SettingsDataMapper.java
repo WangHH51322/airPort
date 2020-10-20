@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.SettingsData;
+import com.cup.wang.airport.model.settingsData.SettingsData;
 
 import java.util.List;
 

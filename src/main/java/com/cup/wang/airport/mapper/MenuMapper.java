@@ -2,7 +2,7 @@ package com.cup.wang.airport.mapper;
 
 
 
-import com.cup.wang.airport.model.Menu;
+import com.cup.wang.airport.model.utils.Menu;
 
 import java.util.List;
 

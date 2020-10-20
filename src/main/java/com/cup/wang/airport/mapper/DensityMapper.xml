@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.DensityMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Density">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.density.Density">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="density_unit_id" jdbcType="INTEGER" property="densityUnitId" />
     <result column="density_value_id" jdbcType="INTEGER" property="densityValueId" />
     <result column="liquid_id" jdbcType="INTEGER" property="liquidId" />
-      <association property="densityUnit" javaType="com.cup.wang.airport.model.DensityUnit">
+      <association property="densityUnit" javaType="com.cup.wang.airport.model.density.DensityUnit">
           <id property="id" column="duid"/>
           <result property="unit" column="duunit"/>
       </association>
-      <association property="densityConstant" javaType="com.cup.wang.airport.model.DensityConstant">
+      <association property="densityConstant" javaType="com.cup.wang.airport.model.density.DensityConstant">
           <id property="id" column="dcid"/>
           <result property="value" column="dcvalue"/>
           <result property="densityId" column="dcdensityId"/>
       </association>
-      <association property="densityRelative" javaType="com.cup.wang.airport.model.DensityRelative">
+      <association property="densityRelative" javaType="com.cup.wang.airport.model.density.DensityRelative">
           <id property="id" column="drid"/>
           <result property="densityId" column="drdensityId"/>
           <result property="x1" column="drx1"/>
           <result property="x2" column="drx2"/>
       </association>
-      <association property="densityPolynomial" javaType="com.cup.wang.airport.model.DensityPolynomial">
+      <association property="densityPolynomial" javaType="com.cup.wang.airport.model.density.DensityPolynomial">
           <id property="id" column="dpid"/>
           <result property="densityId" column="dpdensityId"/>
           <result property="x0" column="dpx0"/>
@@ -31,7 +31,7 @@
           <result property="x4" column="dpx4"/>
           <result property="x5" column="dpx5"/>
       </association>
-      <collection property="densityFittingList" ofType="com.cup.wang.airport.model.DensityFitting">
+      <collection property="densityFittingList" ofType="com.cup.wang.airport.model.density.DensityFitting">
           <id property="id" column="dfid"/>
           <result property="densityId" column="dfdensityId"/>
           <result property="density" column="dfdensity"/>
@@ -104,13 +104,13 @@
     delete from density_test
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.Density">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.density.Density">
     insert into density_test (id, density_unit_id, density_value_id, 
       liquid_id)
     values (#{id,jdbcType=INTEGER}, #{densityUnitId,jdbcType=INTEGER}, #{densityValueId,jdbcType=INTEGER}, 
       #{liquidId,jdbcType=INTEGER})
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Density">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.density.Density">
     insert into density_test
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -141,7 +141,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Density">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.density.Density">
     update density_test
     <set>
       <if test="densityUnitId != null">
@@ -156,7 +156,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Density">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.density.Density">
     update density_test
     set density_unit_id = #{densityUnitId,jdbcType=INTEGER},
       density_value_id = #{densityValueId,jdbcType=INTEGER},

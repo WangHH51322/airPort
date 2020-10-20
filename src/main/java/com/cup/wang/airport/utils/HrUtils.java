@@ -1,6 +1,6 @@
 package com.cup.wang.airport.utils;
 
-import com.cup.wang.airport.model.Hr;
+import com.cup.wang.airport.model.utils.Hr;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**

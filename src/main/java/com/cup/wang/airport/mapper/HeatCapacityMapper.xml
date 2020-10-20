@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.HeatCapacityMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.heatCapacity.HeatCapacity">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="heat_capacity_unit_id" jdbcType="INTEGER" property="heatCapacityUnitId" />
+    <result column="heat_capacity_value_id" jdbcType="INTEGER" property="heatCapacityValueId" />
+    <result column="liquid_id" jdbcType="INTEGER" property="liquidId" />
+      <association property="heatCapacityConstant" javaType="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant">
+          <id property="id" column="hcid"/>
+          <result property="value" column="hcvalue"/>
+          <result property="heatCapacityId" column="hcId"/>
+      </association>
+      <collection property="heatCapacityFitting" ofType="com.cup.wang.airport.model.heatCapacity.HeatCapacityFitting">
+          <id property="id" column="hcfid"/>
+          <result property="heatCapacityId" column="hcfId"/>
+          <result property="heatCapacity" column="hCapacity"/>
+          <result property="vapor" column="hcfvapor"/>
+          <result property="temperature" column="hcftemperature"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, heat_capacity_unit_id, heat_capacity_value_id, liquid_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from heat_capacity
+    where liquid_id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getHeatCapacityByLiquidId" resultMap="BaseResultMap">
+        select h.*,
+        <if test="heatCapacityValueId == 1">
+            hc.id as hcfid,hc.value as hcvalue,hc.heat_capacity_id as hcId
+        </if>
+        <if test="heatCapacityValueId == 2">
+            hcf.id as hcfid,hcf.heat_capacity_id as hcfId,hcf.heat_capacity as hCapacity,hcf.vapor as hcfvapor,hcf.temperature as hcftemperature
+        </if>
+        from heat_capacity h,heat_capacity_fitting hcf,heat_capacity_constant hc
+        where h.liquid_id=#{id}
+        <if test="heatCapacityValueId == 1">
+            and h.id=hc.heat_capacity_id
+        </if>
+        <if test="heatCapacityValueId == 2">
+            and h.id=hcf.heat_capacity_id
+        </if>
+        order by h.id;
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from heat_capacity
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacity">
+    insert into heat_capacity (id, heat_capacity_unit_id, heat_capacity_value_id, 
+      liquid_id)
+    values (#{id,jdbcType=INTEGER}, #{heatCapacityUnitId,jdbcType=INTEGER}, #{heatCapacityValueId,jdbcType=INTEGER}, 
+      #{liquidId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacity" useGeneratedKeys="true" keyProperty="id">
+    insert into heat_capacity
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="heatCapacityUnitId != null">
+        heat_capacity_unit_id,
+      </if>
+      <if test="heatCapacityValueId != null">
+        heat_capacity_value_id,
+      </if>
+      <if test="liquidId != null">
+        liquid_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacityUnitId != null">
+        #{heatCapacityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacityValueId != null">
+        #{heatCapacityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        #{liquidId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacity">
+    update heat_capacity
+    <set>
+      <if test="heatCapacityUnitId != null">
+        heat_capacity_unit_id = #{heatCapacityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="heatCapacityValueId != null">
+        heat_capacity_value_id = #{heatCapacityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        liquid_id = #{liquidId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacity">
+    update heat_capacity
+    set heat_capacity_unit_id = #{heatCapacityUnitId,jdbcType=INTEGER},
+      heat_capacity_value_id = #{heatCapacityValueId,jdbcType=INTEGER},
+      liquid_id = #{liquidId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

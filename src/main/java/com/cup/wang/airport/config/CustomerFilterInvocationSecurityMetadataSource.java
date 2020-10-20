@@ -1,7 +1,7 @@
 package com.cup.wang.airport.config;
 
-import com.cup.wang.airport.model.Role;
-import com.cup.wang.airport.model.Menu;
+import com.cup.wang.airport.model.utils.Role;
+import com.cup.wang.airport.model.utils.Menu;
 import com.cup.wang.airport.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;

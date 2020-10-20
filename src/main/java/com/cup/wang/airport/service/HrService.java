@@ -2,7 +2,7 @@ package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.HrMapper;
 import com.cup.wang.airport.mapper.HrRoleMapper;
-import com.cup.wang.airport.model.Hr;
+import com.cup.wang.airport.model.utils.Hr;
 import com.cup.wang.airport.utils.HrUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

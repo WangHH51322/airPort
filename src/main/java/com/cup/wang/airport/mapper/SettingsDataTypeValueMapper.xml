@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.SettingsDataTypeValueMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.SettingsDataTypeValue">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="value" jdbcType="VARCHAR" property="value" />
     <result column="label" jdbcType="VARCHAR" property="label" />
@@ -20,13 +20,13 @@
     delete from settings_data_type_value
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.SettingsDataTypeValue">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
     insert into settings_data_type_value (id, value, label, 
       type_id)
     values (#{id,jdbcType=INTEGER}, #{value,jdbcType=VARCHAR}, #{label,jdbcType=VARCHAR}, 
       #{typeId,jdbcType=INTEGER})
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.SettingsDataTypeValue">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
     insert into settings_data_type_value
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -57,7 +57,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.SettingsDataTypeValue">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
     update settings_data_type_value
     <set>
       <if test="value != null">
@@ -72,7 +72,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.SettingsDataTypeValue">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValue">
     update settings_data_type_value
     set value = #{value,jdbcType=VARCHAR},
       label = #{label,jdbcType=VARCHAR},

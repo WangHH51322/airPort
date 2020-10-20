@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.MenuRole;
+import com.cup.wang.airport.model.utils.MenuRole;
 import org.apache.ibatis.annotations.Param;
 
 

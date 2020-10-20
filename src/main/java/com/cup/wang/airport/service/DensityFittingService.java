@@ -1,8 +1,7 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.DensityFittingMapper;
-import com.cup.wang.airport.model.DensityFitting;
-import org.aspectj.lang.annotation.Around;
+import com.cup.wang.airport.model.density.DensityFitting;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,14 @@ public class DensityFittingService {
 
     public Integer deleteDensityFittingById(Integer id) {
         return densityFittingMapper.deleteDensityFittingById(id);
+    }
+
+    public int updateDensityFittings(List<DensityFitting> densityFittings) {
+        return densityFittingMapper.updateDensityFittings(densityFittings);
+    }
+
+    public int addDensityFittingsByDensityId(List<DensityFitting> densityFittings) {
+        return densityFittingMapper.addDensityFittingsByDensityId(densityFittings);
     }
 }
 

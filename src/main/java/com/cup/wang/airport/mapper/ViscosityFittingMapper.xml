@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.ViscosityFittingMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="viscosity_id" jdbcType="INTEGER" property="viscosityId" />
+    <result column="viscosity" jdbcType="DOUBLE" property="viscosity" />
+    <result column="temperature" jdbcType="DOUBLE" property="temperature" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, viscosity_id, viscosity, temperature
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from viscosity_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllViscosityFittings" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from viscosity_fitting
+    </select>
+    <select id="getViscosityFittingsByViscosityId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from viscosity_fitting
+        where viscosity_id = #{did,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from viscosity_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+    insert into viscosity_fitting (id, viscosity_id, viscosity, 
+      temperature)
+    values (#{id,jdbcType=INTEGER}, #{viscosityId,jdbcType=INTEGER}, #{viscosity,jdbcType=DOUBLE}, 
+      #{temperature,jdbcType=DOUBLE})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+    insert into viscosity_fitting
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="viscosityId != null">
+        viscosity_id,
+      </if>
+      <if test="viscosity != null">
+        viscosity,
+      </if>
+      <if test="temperature != null">
+        temperature,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="viscosityId != null">
+        #{viscosityId,jdbcType=INTEGER},
+      </if>
+      <if test="viscosity != null">
+        #{viscosity,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        #{temperature,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+    <insert id="addViscosityFittingsByViscosityId" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="viscosityFittings" item="item" index="index" open="" close="" separator=";">
+        insert into viscosity_fitting
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    id,
+                </if>
+                <if test="item.viscosityId != null">
+                    viscosity_id,
+                </if>
+                <if test="item.viscosity != null">
+                    viscosity,
+                </if>
+                <if test="item.temperature != null">
+                    temperature,
+                </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    #{item.id,jdbcType=INTEGER},
+                </if>
+                <if test="item.viscosityId != null">
+                    #{item.viscosityId,jdbcType=INTEGER},
+                </if>
+                <if test="item.viscosity != null">
+                    #{item.viscosity,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+        </foreach>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+    update viscosity_fitting
+    <set>
+      <if test="viscosityId != null">
+        viscosity_id = #{viscosityId,jdbcType=INTEGER},
+      </if>
+      <if test="viscosity != null">
+        viscosity = #{viscosity,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        temperature = #{temperature,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+    update viscosity_fitting
+    set viscosity_id = #{viscosityId,jdbcType=INTEGER},
+      viscosity = #{viscosity,jdbcType=DOUBLE},
+      temperature = #{temperature,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+    <update id="updateViscosityFittings" parameterType="com.cup.wang.airport.model.viscosity.ViscosityFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="viscosityFittings" item="item" index="index" open="" close="" separator=";">
+            update
+            viscosity_fitting set
+                <trim prefix="" suffix=" " suffixOverrides=",">
+                    <if test="item.viscosityId != null">
+                        viscosity_id = #{item.viscosityId,jdbcType=INTEGER},
+                    </if>
+                    <if test="item.viscosity != null">
+                        viscosity = #{item.viscosity,jdbcType=DOUBLE},
+                    </if>
+                    <if test="item.temperature != null">
+                        temperature = #{item.temperature,jdbcType=DOUBLE},
+                    </if>
+                </trim>
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

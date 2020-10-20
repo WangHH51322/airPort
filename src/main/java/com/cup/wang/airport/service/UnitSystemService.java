@@ -1,7 +1,7 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.UnitSystemMapper;
-import com.cup.wang.airport.model.UnitSystem;
+import com.cup.wang.airport.model.unit.UnitSystem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

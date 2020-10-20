@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.HrRole;
+import com.cup.wang.airport.model.utils.HrRole;
 import org.apache.ibatis.annotations.Param;
 
 /**

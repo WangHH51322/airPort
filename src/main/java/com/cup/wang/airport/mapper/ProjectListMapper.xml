@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.ProjectListMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.ProjectList">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.project.ProjectList">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="create_date" jdbcType="TIMESTAMP" property="createDate" />
@@ -40,7 +40,7 @@
     delete from project_list
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.ProjectList">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.project.ProjectList">
     insert into project_list (id, name, create_date, 
       change_date, status, author, 
       remarks)
@@ -48,7 +48,7 @@
       #{changeDate,jdbcType=TIMESTAMP}, #{status,jdbcType=VARCHAR}, #{author,jdbcType=VARCHAR}, 
       #{remarks,jdbcType=VARCHAR})
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.ProjectList" useGeneratedKeys="true" keyProperty="id">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.project.ProjectList" useGeneratedKeys="true" keyProperty="id">
     insert into project_list
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -97,7 +97,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.ProjectList">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.project.ProjectList">
     update project_list
     <set>
       <if test="name != null">
@@ -121,7 +121,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.ProjectList">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.project.ProjectList">
     update project_list
     set name = #{name,jdbcType=VARCHAR},
       create_date = #{createDate,jdbcType=TIMESTAMP},

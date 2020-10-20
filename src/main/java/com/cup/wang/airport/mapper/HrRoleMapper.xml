@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.cup.wang.airport.mapper.HrRoleMapper" >
-    <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.HrRole" >
+    <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.utils.HrRole" >
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="hrid" property="hrid" jdbcType="INTEGER" />
         <result column="rid" property="rid" jdbcType="INTEGER" />
@@ -28,13 +28,13 @@
     delete from hr_role
     where id = #{id,jdbcType=INTEGER}
   </delete>
-    <insert id="insert" parameterType="com.cup.wang.airport.model.HrRole" >
+    <insert id="insert" parameterType="com.cup.wang.airport.model.utils.HrRole" >
     insert into hr_role (id, hrid, rid
       )
     values (#{id,jdbcType=INTEGER}, #{hrid,jdbcType=INTEGER}, #{rid,jdbcType=INTEGER}
       )
   </insert>
-    <insert id="insertSelective" parameterType="com.cup.wang.airport.model.HrRole" >
+    <insert id="insertSelective" parameterType="com.cup.wang.airport.model.utils.HrRole" >
         insert into hr_role
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null" >
@@ -59,7 +59,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.HrRole" >
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.utils.HrRole" >
         update hr_role
         <set >
             <if test="hrid != null" >
@@ -71,7 +71,7 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.HrRole" >
+    <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.utils.HrRole" >
     update hr_role
     set hrid = #{hrid,jdbcType=INTEGER},
       rid = #{rid,jdbcType=INTEGER}

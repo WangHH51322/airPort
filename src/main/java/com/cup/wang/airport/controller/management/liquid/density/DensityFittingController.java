@@ -1,7 +1,7 @@
 package com.cup.wang.airport.controller.management.liquid.density;
 
-import com.cup.wang.airport.model.DensityFitting;
-import com.cup.wang.airport.model.RespBean;
+import com.cup.wang.airport.model.density.DensityFitting;
+import com.cup.wang.airport.model.utils.RespBean;
 import com.cup.wang.airport.service.DensityFittingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -32,18 +32,18 @@ public class DensityFittingController {
     }
 
     @PutMapping("/")
-    public RespBean updateDensityFitting(@RequestBody DensityFitting densityFitting){
-        if (densityFittingService.updateDensityFitting(densityFitting) == 1){
+    public RespBean updateDensityFittings(@RequestBody List<DensityFitting> densityFittings){
+        if (densityFittingService.updateDensityFittings(densityFittings) == 1){
             return RespBean.ok("更新成功!");
         }
         return RespBean.error("更新失败!");
     }
 
+    /*前端在传入多个DensityFitting对象时,需要提前将density_id给赋值*/
     @PostMapping("/")
-    public RespBean addDensityFitting(@RequestBody DensityFitting densityFitting){
-        if (densityFittingService.addDensityFitting(densityFitting) == 1){
-            Integer id = densityFitting.getId();
-            return RespBean.ok("添加成功!",id);
+    public RespBean addDensityFittingsByDensityId(@RequestBody List<DensityFitting> densityFittings){
+        if(densityFittingService.addDensityFittingsByDensityId(densityFittings) == 1){
+            return RespBean.ok("添加成功!");
         }
         return RespBean.error("添加失败!");
     }

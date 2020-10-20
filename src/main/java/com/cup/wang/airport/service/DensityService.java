@@ -1,7 +1,7 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.DensityMapper;
-import com.cup.wang.airport.model.Density;
+import com.cup.wang.airport.model.density.Density;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.ProjectUnit;
+import com.cup.wang.airport.model.project.ProjectUnit;
 
 import java.util.List;
 

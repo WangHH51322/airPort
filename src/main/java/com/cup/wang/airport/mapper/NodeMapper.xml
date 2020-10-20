@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.NodeMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Node">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="project_id" jdbcType="INTEGER" property="projectId" />
+    <result column="numb" jdbcType="INTEGER" property="numb" />
+    <result column="flow" jdbcType="DOUBLE" property="flow" />
+    <result column="pressure" jdbcType="DOUBLE" property="pressure" />
+    <result column="temperature" jdbcType="DOUBLE" property="temperature" />
+    <result column="lrc" jdbcType="DOUBLE" property="lrc" />
+    <result column="bc_type" jdbcType="INTEGER" property="bcType" />
+    <result column="node_type" jdbcType="INTEGER" property="nodeType" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, project_id, numb, flow, pressure, temperature, lrc, bc_type, node_type
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from node
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getNodesByProjectId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select *
+        from node
+        where project_id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from node
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.Node">
+    insert into node (id, name, project_id, 
+      numb, flow, pressure, 
+      temperature, lrc, bc_type, 
+      node_type)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{projectId,jdbcType=INTEGER}, 
+      #{numb,jdbcType=INTEGER}, #{flow,jdbcType=DOUBLE}, #{pressure,jdbcType=DOUBLE}, 
+      #{temperature,jdbcType=DOUBLE}, #{lrc,jdbcType=DOUBLE}, #{bcType,jdbcType=INTEGER}, 
+      #{nodeType,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Node">
+    insert into node
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="projectId != null">
+        project_id,
+      </if>
+      <if test="numb != null">
+        numb,
+      </if>
+      <if test="flow != null">
+        flow,
+      </if>
+      <if test="pressure != null">
+        pressure,
+      </if>
+      <if test="temperature != null">
+        temperature,
+      </if>
+      <if test="lrc != null">
+        lrc,
+      </if>
+      <if test="bcType != null">
+        bc_type,
+      </if>
+      <if test="nodeType != null">
+        node_type,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="projectId != null">
+        #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="numb != null">
+        #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="flow != null">
+        #{flow,jdbcType=DOUBLE},
+      </if>
+      <if test="pressure != null">
+        #{pressure,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        #{temperature,jdbcType=DOUBLE},
+      </if>
+      <if test="lrc != null">
+        #{lrc,jdbcType=DOUBLE},
+      </if>
+      <if test="bcType != null">
+        #{bcType,jdbcType=INTEGER},
+      </if>
+      <if test="nodeType != null">
+        #{nodeType,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Node">
+    update node
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="projectId != null">
+        project_id = #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="numb != null">
+        numb = #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="flow != null">
+        flow = #{flow,jdbcType=DOUBLE},
+      </if>
+      <if test="pressure != null">
+        pressure = #{pressure,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        temperature = #{temperature,jdbcType=DOUBLE},
+      </if>
+      <if test="lrc != null">
+        lrc = #{lrc,jdbcType=DOUBLE},
+      </if>
+      <if test="bcType != null">
+        bc_type = #{bcType,jdbcType=INTEGER},
+      </if>
+      <if test="nodeType != null">
+        node_type = #{nodeType,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Node">
+    update node
+    set name = #{name,jdbcType=VARCHAR},
+      project_id = #{projectId,jdbcType=INTEGER},
+      numb = #{numb,jdbcType=INTEGER},
+      flow = #{flow,jdbcType=DOUBLE},
+      pressure = #{pressure,jdbcType=DOUBLE},
+      temperature = #{temperature,jdbcType=DOUBLE},
+      lrc = #{lrc,jdbcType=DOUBLE},
+      bc_type = #{bcType,jdbcType=INTEGER},
+      node_type = #{nodeType,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

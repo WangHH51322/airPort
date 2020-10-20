@@ -1,6 +1,6 @@
 package com.cup.wang.airport.controller.unit;
 
-import com.cup.wang.airport.model.PhysicalQuantityType;
+import com.cup.wang.airport.model.unit.PhysicalQuantityType;
 import com.cup.wang.airport.service.PhysicalQuantityTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

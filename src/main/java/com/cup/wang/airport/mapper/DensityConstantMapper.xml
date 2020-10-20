@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.DensityConstantMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.DensityConstant">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.density.DensityConstant">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="value" jdbcType="DOUBLE" property="value" />
     <result column="density_id" jdbcType="INTEGER" property="densityId" />
   </resultMap>
-    <parameterMap id="ConstantParameterMap" type="com.cup.wang.airport.model.DensityConstant">
+    <parameterMap id="ConstantParameterMap" type="com.cup.wang.airport.model.density.DensityConstant">
         <parameter property="id" resultMap="BaseResultMap"/>
         <parameter property="densityId" resultMap="BaseResultMap"/>
         <parameter property="value" resultMap="BaseResultMap"/>
@@ -35,7 +35,7 @@
     delete from density_constant
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.DensityConstant">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.density.DensityConstant">
     insert into density_constant (id, value, density_id
       )
     values (#{id,jdbcType=INTEGER}, #{value,jdbcType=DOUBLE}, #{densityId,jdbcType=INTEGER}
@@ -67,7 +67,7 @@
     </trim>
   </insert>
 
-    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.DensityConstant">
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.density.DensityConstant">
     update density_constant
     <set>
       <if test="value != null">
@@ -79,7 +79,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.DensityConstant">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.density.DensityConstant">
     update density_constant
     set value = #{value,jdbcType=DOUBLE},
       density_id = #{densityId,jdbcType=INTEGER}

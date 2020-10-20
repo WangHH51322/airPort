@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.DensityFitting;
+import com.cup.wang.airport.model.density.DensityFitting;
 
 import java.util.List;
 
@@ -19,4 +19,8 @@ public interface DensityFittingMapper {
     Integer addDensityFitting(DensityFitting densityFitting);
 
     Integer deleteDensityFittingById(Integer id);
+
+    int updateDensityFittings(List<DensityFitting> densityFittings);
+
+    int addDensityFittingsByDensityId(List<DensityFitting> densityFittings);
 }

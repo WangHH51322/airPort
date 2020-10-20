@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.cup.wang.airport.mapper.MenuMapper" >
-    <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Menu" >
+    <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.utils.Menu" >
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="url" property="url" jdbcType="VARCHAR" />
         <result column="path" property="path" jdbcType="VARCHAR" />
@@ -10,13 +10,13 @@
         <result column="iconCls" property="iconCls" jdbcType="VARCHAR" />
         <result column="parentId" property="parentId" jdbcType="INTEGER" />
         <result column="enabled" property="enabled" jdbcType="BIT" />
-        <association property="meta" javaType="com.cup.wang.airport.model.Meta">
+        <association property="meta" javaType="com.cup.wang.airport.model.utils.Meta">
             <result column="keepAlive" property="keepAlive" jdbcType="BIT" />
             <result column="requireAuth" property="requireAuth" jdbcType="BIT" />
         </association>
     </resultMap>
-    <resultMap id="Menus2" type="com.cup.wang.airport.model.Menu" extends="BaseResultMap">
-        <collection property="children" ofType="com.cup.wang.airport.model.Menu">
+    <resultMap id="Menus2" type="com.cup.wang.airport.model.utils.Menu" extends="BaseResultMap">
+        <collection property="children" ofType="com.cup.wang.airport.model.utils.Menu">
             <id column="id2" property="id" jdbcType="INTEGER" />
             <result column="url2" property="url" jdbcType="VARCHAR" />
             <result column="path2" property="path" jdbcType="VARCHAR" />
@@ -25,26 +25,26 @@
             <result column="iconCls2" property="iconCls" jdbcType="VARCHAR" />
             <result column="parentId2" property="parentId" jdbcType="INTEGER" />
             <result column="enabled2" property="enabled" jdbcType="BIT" />
-            <association property="meta" javaType="com.cup.wang.airport.model.Meta">
+            <association property="meta" javaType="com.cup.wang.airport.model.utils.Meta">
                 <result column="keepAlive2" property="keepAlive" jdbcType="BIT" />
                 <result column="requireAuth2" property="requireAuth" jdbcType="BIT" />
             </association>
         </collection>
     </resultMap>
-    <resultMap id="MenuWithRole" type="com.cup.wang.airport.model.Menu" extends="BaseResultMap">
-        <collection property="roles" ofType="com.cup.wang.airport.model.Role">
+    <resultMap id="MenuWithRole" type="com.cup.wang.airport.model.utils.Menu" extends="BaseResultMap">
+        <collection property="roles" ofType="com.cup.wang.airport.model.utils.Role">
             <id column="rid" property="id"/>
             <result column="rname" property="name"/>
             <result column="rnameZh" property="nameZh"/>
         </collection>
     </resultMap>
-    <resultMap id="MenuWithChildren" type="com.cup.wang.airport.model.Menu" extends="BaseResultMap">
+    <resultMap id="MenuWithChildren" type="com.cup.wang.airport.model.utils.Menu" extends="BaseResultMap">
         <id column="id1" property="id"/>
         <result column="name1" property="name"/>
-        <collection property="children" ofType="com.cup.wang.airport.model.Menu">
+        <collection property="children" ofType="com.cup.wang.airport.model.utils.Menu">
             <id column="id2" property="id"/>
             <result column="name2" property="name"/>
-            <collection property="children" ofType="com.cup.wang.airport.model.Menu">
+            <collection property="children" ofType="com.cup.wang.airport.model.utils.Menu">
                 <id column="id3" property="id"/>
                 <result column="name3" property="name"/>
             </collection>
@@ -75,7 +75,7 @@
     delete from menu
     where id = #{id,jdbcType=INTEGER}
   </delete>
-    <insert id="insert" parameterType="com.cup.wang.airport.model.Menu" >
+    <insert id="insert" parameterType="com.cup.wang.airport.model.utils.Menu" >
     insert into menu (id, url, path,
       component, name, iconCls,
       keepAlive, requireAuth, parentId,
@@ -85,7 +85,7 @@
       #{keepalive,jdbcType=BIT}, #{requireauth,jdbcType=BIT}, #{parentid,jdbcType=INTEGER},
       #{enabled,jdbcType=BIT})
   </insert>
-    <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Menu" >
+    <insert id="insertSelective" parameterType="com.cup.wang.airport.model.utils.Menu" >
         insert into menu
         <trim prefix="(" suffix=")" suffixOverrides="," >
             <if test="id != null" >
@@ -152,7 +152,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Menu" >
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.utils.Menu" >
         update menu
         <set >
             <if test="url != null" >
@@ -185,7 +185,7 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Menu" >
+    <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.utils.Menu" >
     update menu
     set url = #{url,jdbcType=VARCHAR},
       path = #{path,jdbcType=VARCHAR},

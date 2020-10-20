@@ -1,7 +1,7 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.SettingsDataMapper;
-import com.cup.wang.airport.model.SettingsData;
+import com.cup.wang.airport.model.settingsData.SettingsData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

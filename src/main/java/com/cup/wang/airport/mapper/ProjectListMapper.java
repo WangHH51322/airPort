@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.ProjectList;
+import com.cup.wang.airport.model.project.ProjectList;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.Role;
+import com.cup.wang.airport.model.utils.Role;
 
 import java.util.List;
 

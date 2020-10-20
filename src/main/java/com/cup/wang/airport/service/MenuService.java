@@ -2,8 +2,8 @@ package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.MenuMapper;
 import com.cup.wang.airport.mapper.MenuRoleMapper;
-import com.cup.wang.airport.model.Hr;
-import com.cup.wang.airport.model.Menu;
+import com.cup.wang.airport.model.utils.Hr;
+import com.cup.wang.airport.model.utils.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,9 @@
 package com.cup.wang.airport.controller.system;
 
 
-import com.cup.wang.airport.model.Hr;
-import com.cup.wang.airport.model.RespBean;
-import com.cup.wang.airport.model.Role;
+import com.cup.wang.airport.model.utils.Hr;
+import com.cup.wang.airport.model.utils.RespBean;
+import com.cup.wang.airport.model.utils.Role;
 import com.cup.wang.airport.service.HrService;
 import com.cup.wang.airport.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;

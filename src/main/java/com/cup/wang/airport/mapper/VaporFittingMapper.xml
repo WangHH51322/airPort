@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.VaporFittingMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.vapor.VaporFitting">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="vapor_id" jdbcType="INTEGER" property="vaporId" />
+    <result column="vapor" jdbcType="DOUBLE" property="vapor" />
+    <result column="temperature" jdbcType="DOUBLE" property="temperature" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, vapor_id, vapor, temperature
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from vapor_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllVaporFittings" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from vapor_fitting
+    </select>
+    <select id="getVaporFittingsByVaporId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from vapor_fitting
+        where vapor_id = #{did,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from vapor_fitting
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.vapor.VaporFitting">
+    insert into vapor_fitting (id, vapor_id, vapor, 
+      temperature)
+    values (#{id,jdbcType=INTEGER}, #{vaporId,jdbcType=INTEGER}, #{vapor,jdbcType=DOUBLE}, 
+      #{temperature,jdbcType=DOUBLE})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.vapor.VaporFitting">
+    insert into vapor_fitting
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="vaporId != null">
+        vapor_id,
+      </if>
+      <if test="vapor != null">
+        vapor,
+      </if>
+      <if test="temperature != null">
+        temperature,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="vaporId != null">
+        #{vaporId,jdbcType=INTEGER},
+      </if>
+      <if test="vapor != null">
+        #{vapor,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        #{temperature,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+    <insert id="addVaporFittingsByVaporId" parameterType="com.cup.wang.airport.model.vapor.VaporFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="vaporFittings" item="item" index="index" open="" close="" separator=";">
+            insert into vapor_fitting
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    id,
+                </if>
+                <if test="item.vaporId != null">
+                    vapor_id,
+                </if>
+                <if test="item.vapor != null">
+                    vapor,
+                </if>
+                <if test="item.temperature != null">
+                    temperature,
+                </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    #{item.id,jdbcType=INTEGER},
+                </if>
+                <if test="item.vaporId != null">
+                    #{item.vaporId,jdbcType=INTEGER},
+                </if>
+                <if test="item.vapor != null">
+                    #{item.vapor,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+        </foreach>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.vapor.VaporFitting">
+    update vapor_fitting
+    <set>
+      <if test="vaporId != null">
+        vapor_id = #{vaporId,jdbcType=INTEGER},
+      </if>
+      <if test="vapor != null">
+        vapor = #{vapor,jdbcType=DOUBLE},
+      </if>
+      <if test="temperature != null">
+        temperature = #{temperature,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.vapor.VaporFitting">
+    update vapor_fitting
+    set vapor_id = #{vaporId,jdbcType=INTEGER},
+      vapor = #{vapor,jdbcType=DOUBLE},
+      temperature = #{temperature,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+    <update id="updateVaporFittings" parameterType="com.cup.wang.airport.model.vapor.VaporFitting" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="vaporFittings" item="item" index="index" open="" close="" separator=";">
+            update
+            vapor_fitting set
+            <trim prefix="" suffix=" " suffixOverrides=",">
+                <if test="item.vaporId != null">
+                    vapor_id = #{item.vaporId,jdbcType=INTEGER},
+                </if>
+                <if test="item.vapor != null">
+                    vapor = #{item.vapor,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    temperature = #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+            where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

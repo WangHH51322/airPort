@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.VaporMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.vapor.Vapor">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="vapor_unit_id" jdbcType="INTEGER" property="vaporUnitId" />
+    <result column="vapor_value_id" jdbcType="INTEGER" property="vaporValueId" />
+    <result column="liquid_id" jdbcType="INTEGER" property="liquidId" />
+      <association property="vaporConstant" javaType="com.cup.wang.airport.model.vapor.VaporConstant">
+          <id property="id" column="vcid"/>
+          <result property="value" column="vcvalue"/>
+          <result property="vaporId" column="vaporId"/>
+      </association>
+      <collection property="vaporFittings" ofType="com.cup.wang.airport.model.vapor.VaporFitting">
+          <id property="id" column="vfid"/>
+          <result property="vaporId" column="vfvaporId"/>
+          <result property="vapor" column="vfvapor"/>
+          <result property="temperature" column="vftemperature"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, vapor_unit_id, vapor_value_id, liquid_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from vapor
+    where liquid_id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getVaporByLiquidId" resultMap="BaseResultMap">
+        select v.*,
+        <if test="vaporValueId == 1">
+            vc.id as vcid,vc.value as vcvalue,vc.vapor_id as vaporId
+        </if>
+        <if test="vaporValueId == 2">
+            vf.id as vfid,vf.vapor_id as vfvaporId,vf.vapor as vfvapor,vf.temperature as vftemperature
+        </if>
+        from vapor v,vapor_fitting vf,vapor_constant vc
+        where v.liquid_id=#{id}
+        <if test="vaporValueId == 1">
+            and v.id=vc.vapor_id
+        </if>
+        <if test="vaporValueId == 2">
+            and v.id=vf.vapor_id
+        </if>
+        order by v.id;
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from vapor
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.vapor.Vapor">
+    insert into vapor (id, vapor_unit_id, vapor_value_id, 
+      liquid_id)
+    values (#{id,jdbcType=INTEGER}, #{vaporUnitId,jdbcType=INTEGER}, #{vaporValueId,jdbcType=INTEGER}, 
+      #{liquidId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.vapor.Vapor">
+    insert into vapor
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="vaporUnitId != null">
+        vapor_unit_id,
+      </if>
+      <if test="vaporValueId != null">
+        vapor_value_id,
+      </if>
+      <if test="liquidId != null">
+        liquid_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="vaporUnitId != null">
+        #{vaporUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="vaporValueId != null">
+        #{vaporValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        #{liquidId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.vapor.Vapor">
+    update vapor
+    <set>
+      <if test="vaporUnitId != null">
+        vapor_unit_id = #{vaporUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="vaporValueId != null">
+        vapor_value_id = #{vaporValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        liquid_id = #{liquidId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.vapor.Vapor">
+    update vapor
+    set vapor_unit_id = #{vaporUnitId,jdbcType=INTEGER},
+      vapor_value_id = #{vaporValueId,jdbcType=INTEGER},
+      liquid_id = #{liquidId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

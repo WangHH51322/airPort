@@ -1,9 +1,8 @@
 package com.cup.wang.airport.controller.management;
 
-import com.cup.wang.airport.model.DensityUnit;
-import com.cup.wang.airport.model.ProjectList;
-import com.cup.wang.airport.model.RespBean;
-import com.cup.wang.airport.model.RespPageBean;
+import com.cup.wang.airport.model.project.ProjectList;
+import com.cup.wang.airport.model.utils.RespBean;
+import com.cup.wang.airport.model.utils.RespPageBean;
 import com.cup.wang.airport.service.ProjectListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

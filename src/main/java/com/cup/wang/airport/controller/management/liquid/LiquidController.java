@@ -1,7 +1,7 @@
 package com.cup.wang.airport.controller.management.liquid;
 
 import com.cup.wang.airport.model.Liquid;
-import com.cup.wang.airport.model.RespBean;
+import com.cup.wang.airport.model.utils.RespBean;
 import com.cup.wang.airport.service.LiquidService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

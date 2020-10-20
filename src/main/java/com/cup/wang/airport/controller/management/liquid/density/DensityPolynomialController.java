@@ -1,7 +1,7 @@
 package com.cup.wang.airport.controller.management.liquid.density;
 
-import com.cup.wang.airport.model.DensityPolynomial;
-import com.cup.wang.airport.model.RespBean;
+import com.cup.wang.airport.model.density.DensityPolynomial;
+import com.cup.wang.airport.model.utils.RespBean;
 import com.cup.wang.airport.service.DensityPolynomialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

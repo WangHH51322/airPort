@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.PipeMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Pipe">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="numb" jdbcType="INTEGER" property="numb" />
+    <result column="project_id" jdbcType="INTEGER" property="projectId" />
+    <result column="start_id" jdbcType="INTEGER" property="startId" />
+    <result column="start_name" jdbcType="VARCHAR" property="startName" />
+    <result column="end_id" jdbcType="INTEGER" property="endId" />
+    <result column="end_name" jdbcType="VARCHAR" property="endName" />
+    <result column="length" jdbcType="DOUBLE" property="length" />
+    <result column="outside_diameter" jdbcType="DOUBLE" property="outsideDiameter" />
+    <result column="roughness" jdbcType="DOUBLE" property="roughness" />
+    <result column="thickness" jdbcType="DOUBLE" property="thickness" />
+    <result column="k" jdbcType="DOUBLE" property="k" />
+    <result column="er" jdbcType="DOUBLE" property="er" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, numb, project_id, start_id, start_name, end_id, end_name, length, outside_diameter, 
+    roughness, thickness, k, er
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from pipe
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getPipesByProjectId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select *
+        from pipe
+        where project_id = #{id,jdbcType=INTEGER}
+        order by numb
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from pipe
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.Pipe">
+    insert into pipe (id, name, numb, 
+      project_id, start_id, start_name, 
+      end_id, end_name, length, 
+      outside_diameter, roughness, thickness, 
+      k, er)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{numb,jdbcType=INTEGER}, 
+      #{projectId,jdbcType=INTEGER}, #{startId,jdbcType=INTEGER}, #{startName,jdbcType=VARCHAR}, 
+      #{endId,jdbcType=INTEGER}, #{endName,jdbcType=VARCHAR}, #{length,jdbcType=DOUBLE}, 
+      #{outsideDiameter,jdbcType=DOUBLE}, #{roughness,jdbcType=DOUBLE}, #{thickness,jdbcType=DOUBLE}, 
+      #{k,jdbcType=DOUBLE}, #{er,jdbcType=DOUBLE})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Pipe">
+    insert into pipe
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="numb != null">
+        numb,
+      </if>
+      <if test="projectId != null">
+        project_id,
+      </if>
+      <if test="startId != null">
+        start_id,
+      </if>
+      <if test="startName != null">
+        start_name,
+      </if>
+      <if test="endId != null">
+        end_id,
+      </if>
+      <if test="endName != null">
+        end_name,
+      </if>
+      <if test="length != null">
+        length,
+      </if>
+      <if test="outsideDiameter != null">
+        outside_diameter,
+      </if>
+      <if test="roughness != null">
+        roughness,
+      </if>
+      <if test="thickness != null">
+        thickness,
+      </if>
+      <if test="k != null">
+        k,
+      </if>
+      <if test="er != null">
+        er,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="numb != null">
+        #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="projectId != null">
+        #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="startId != null">
+        #{startId,jdbcType=INTEGER},
+      </if>
+      <if test="startName != null">
+        #{startName,jdbcType=VARCHAR},
+      </if>
+      <if test="endId != null">
+        #{endId,jdbcType=INTEGER},
+      </if>
+      <if test="endName != null">
+        #{endName,jdbcType=VARCHAR},
+      </if>
+      <if test="length != null">
+        #{length,jdbcType=DOUBLE},
+      </if>
+      <if test="outsideDiameter != null">
+        #{outsideDiameter,jdbcType=DOUBLE},
+      </if>
+      <if test="roughness != null">
+        #{roughness,jdbcType=DOUBLE},
+      </if>
+      <if test="thickness != null">
+        #{thickness,jdbcType=DOUBLE},
+      </if>
+      <if test="k != null">
+        #{k,jdbcType=DOUBLE},
+      </if>
+      <if test="er != null">
+        #{er,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Pipe">
+    update pipe
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="numb != null">
+        numb = #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="projectId != null">
+        project_id = #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="startId != null">
+        start_id = #{startId,jdbcType=INTEGER},
+      </if>
+      <if test="startName != null">
+        start_name = #{startName,jdbcType=VARCHAR},
+      </if>
+      <if test="endId != null">
+        end_id = #{endId,jdbcType=INTEGER},
+      </if>
+      <if test="endName != null">
+        end_name = #{endName,jdbcType=VARCHAR},
+      </if>
+      <if test="length != null">
+        length = #{length,jdbcType=DOUBLE},
+      </if>
+      <if test="outsideDiameter != null">
+        outside_diameter = #{outsideDiameter,jdbcType=DOUBLE},
+      </if>
+      <if test="roughness != null">
+        roughness = #{roughness,jdbcType=DOUBLE},
+      </if>
+      <if test="thickness != null">
+        thickness = #{thickness,jdbcType=DOUBLE},
+      </if>
+      <if test="k != null">
+        k = #{k,jdbcType=DOUBLE},
+      </if>
+      <if test="er != null">
+        er = #{er,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Pipe">
+    update pipe
+    set name = #{name,jdbcType=VARCHAR},
+      numb = #{numb,jdbcType=INTEGER},
+      project_id = #{projectId,jdbcType=INTEGER},
+      start_id = #{startId,jdbcType=INTEGER},
+      start_name = #{startName,jdbcType=VARCHAR},
+      end_id = #{endId,jdbcType=INTEGER},
+      end_name = #{endName,jdbcType=VARCHAR},
+      length = #{length,jdbcType=DOUBLE},
+      outside_diameter = #{outsideDiameter,jdbcType=DOUBLE},
+      roughness = #{roughness,jdbcType=DOUBLE},
+      thickness = #{thickness,jdbcType=DOUBLE},
+      k = #{k,jdbcType=DOUBLE},
+      er = #{er,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

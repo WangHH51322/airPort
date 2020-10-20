@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.SettingsDataTypeValue;
+import com.cup.wang.airport.model.settingsData.SettingsDataTypeValue;
 
 public interface SettingsDataTypeValueMapper {
     int deleteByPrimaryKey(Integer id);

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.PhysicalQuantityMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.PhysicalQuantity">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.unit.PhysicalQuantity">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="unit_name_iso" jdbcType="VARCHAR" property="unitNameIso" />
     <result column="symbol" jdbcType="VARCHAR" property="symbol" />
     <result column="quantity_name" jdbcType="VARCHAR" property="quantityName" />
     <result column="english_name" jdbcType="VARCHAR" property="englishName" />
     <result column="unit_symbol_iso" jdbcType="VARCHAR" property="unitSymbolIso" />
-      <collection property="quantityUnits" ofType="com.cup.wang.airport.model.QuantityUnit">
+      <collection property="quantityUnits" ofType="com.cup.wang.airport.model.unit.QuantityUnit">
           <id property="id" column="quid"/>
           <result property="unitName" column="quUnitName"/>
           <result property="englishName" column="quEnglishName"/>
@@ -50,7 +50,7 @@
     delete from physical_quantity
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.unit.PhysicalQuantity">
     insert into physical_quantity (id, unit_name_iso, symbol, 
       quantity_name, english_name, unit_symbol_iso
       )
@@ -58,7 +58,7 @@
       #{quantityName,jdbcType=VARCHAR}, #{englishName,jdbcType=VARCHAR}, #{unitSymbolIso,jdbcType=VARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.unit.PhysicalQuantity">
     insert into physical_quantity
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -101,7 +101,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.unit.PhysicalQuantity">
     update physical_quantity
     <set>
       <if test="unitNameIso != null">
@@ -122,7 +122,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.PhysicalQuantity">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.unit.PhysicalQuantity">
     update physical_quantity
     set unit_name_iso = #{unitNameIso,jdbcType=VARCHAR},
       symbol = #{symbol,jdbcType=VARCHAR},

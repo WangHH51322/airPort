@@ -1,6 +1,6 @@
 package com.cup.wang.airport.controller;
 
-import com.cup.wang.airport.model.RespBean;
+import com.cup.wang.airport.model.utils.RespBean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 

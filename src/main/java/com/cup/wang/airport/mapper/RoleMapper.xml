@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.cup.wang.airport.mapper.RoleMapper" >
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Role" >
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.utils.Role" >
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="name" property="name" jdbcType="VARCHAR" />
     <result column="nameZh" property="nameZh" jdbcType="VARCHAR" />
@@ -22,13 +22,13 @@
     delete from role
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.Role" >
+  <insert id="insert" parameterType="com.cup.wang.airport.model.utils.Role" >
     insert into role (id, name, nameZh
       )
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{nameZh,jdbcType=VARCHAR}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Role" >
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.utils.Role" >
     insert into role
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -53,7 +53,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Role" >
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.utils.Role" >
     update role
     <set >
       <if test="name != null" >
@@ -65,7 +65,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Role" >
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.utils.Role" >
     update role
     set name = #{name,jdbcType=VARCHAR},
       nameZh = #{nameZh,jdbcType=VARCHAR}

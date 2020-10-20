@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.HeatCapacityConstantMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="value" jdbcType="DOUBLE" property="value" />
+    <result column="heat_capacity_id" jdbcType="INTEGER" property="heatCapacityId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, value, heat_capacity_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from heat_capacity_constant
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllHeatCapacityConstants" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from heat_capacity_constant
+    </select>
+    <select id="getHeatCapacityConstantByHCId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from heat_capacity_constant
+        where heat_capacity_id = #{did,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from heat_capacity_constant
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant">
+    insert into heat_capacity_constant (id, value, heat_capacity_id
+      )
+    values (#{id,jdbcType=INTEGER}, #{value,jdbcType=DOUBLE}, #{heatCapacityId,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant" useGeneratedKeys="true" keyProperty="id">
+    insert into heat_capacity_constant
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="value != null">
+        value,
+      </if>
+      <if test="heatCapacityId != null">
+        heat_capacity_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="value != null">
+        #{value,jdbcType=DOUBLE},
+      </if>
+      <if test="heatCapacityId != null">
+        #{heatCapacityId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant">
+    update heat_capacity_constant
+    <set>
+      <if test="value != null">
+        value = #{value,jdbcType=DOUBLE},
+      </if>
+      <if test="heatCapacityId != null">
+        heat_capacity_id = #{heatCapacityId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.heatCapacity.HeatCapacityConstant">
+    update heat_capacity_constant
+    set value = #{value,jdbcType=DOUBLE},
+      heat_capacity_id = #{heatCapacityId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

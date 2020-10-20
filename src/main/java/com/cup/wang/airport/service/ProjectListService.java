@@ -1,8 +1,8 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.ProjectListMapper;
-import com.cup.wang.airport.model.ProjectList;
-import com.cup.wang.airport.model.RespPageBean;
+import com.cup.wang.airport.model.project.ProjectList;
+import com.cup.wang.airport.model.utils.RespPageBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

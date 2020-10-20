@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.ViscosityMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.viscosity.Viscosity">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="viscosity_unit_id" jdbcType="INTEGER" property="viscosityUnitId" />
+    <result column="viscosity_value_id" jdbcType="INTEGER" property="viscosityValueId" />
+    <result column="liquid_id" jdbcType="INTEGER" property="liquidId" />
+      <association property="viscosityConstant" javaType="com.cup.wang.airport.model.viscosity.ViscosityConstant">
+          <id property="id" column="vcid"/>
+          <result property="value" column="vcvalue"/>
+          <result property="viscosityId" column="viscosityId"/>
+      </association>
+      <collection property="viscosityFittings" ofType="com.cup.wang.airport.model.viscosity.ViscosityFitting">
+          <id property="id" column="vfid"/>
+          <result property="viscosityId" column="vfviscosityId"/>
+          <result property="viscosity" column="vfviscosity"/>
+          <result property="temperature" column="vftemperature"/>
+      </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, viscosity_unit_id, viscosity_value_id, liquid_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from viscosity
+    where liquid_id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getViscosityByLiquidId" resultMap="BaseResultMap">
+        select v.*,
+        <if test="viscosityValueId == 1">
+            vc.id as vcid,vc.value as vcvalue,vc.viscosity_id as viscosityId
+        </if>
+        <if test="viscosityValueId == 2">
+            vf.id as vfid,vf.viscosity_id as vfviscosityId,vf.viscosity as vfviscosity,vf.temperature as vftemperature
+        </if>
+        from viscosity v,viscosity_fitting vf,viscosity_constant vc
+        where v.liquid_id=#{id}
+        <if test="viscosityValueId == 1">
+            and v.id=vc.viscosity_id
+        </if>
+        <if test="viscosityValueId == 2">
+            and v.id=vf.viscosity_id
+        </if>
+        order by v.id;
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from viscosity
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.viscosity.Viscosity">
+    insert into viscosity (id, viscosity_unit_id, viscosity_value_id, 
+      liquid_id)
+    values (#{id,jdbcType=INTEGER}, #{viscosityUnitId,jdbcType=INTEGER}, #{viscosityValueId,jdbcType=INTEGER}, 
+      #{liquidId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.viscosity.Viscosity">
+    insert into viscosity
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="viscosityUnitId != null">
+        viscosity_unit_id,
+      </if>
+      <if test="viscosityValueId != null">
+        viscosity_value_id,
+      </if>
+      <if test="liquidId != null">
+        liquid_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="viscosityUnitId != null">
+        #{viscosityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="viscosityValueId != null">
+        #{viscosityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        #{liquidId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.viscosity.Viscosity">
+    update viscosity
+    <set>
+      <if test="viscosityUnitId != null">
+        viscosity_unit_id = #{viscosityUnitId,jdbcType=INTEGER},
+      </if>
+      <if test="viscosityValueId != null">
+        viscosity_value_id = #{viscosityValueId,jdbcType=INTEGER},
+      </if>
+      <if test="liquidId != null">
+        liquid_id = #{liquidId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.viscosity.Viscosity">
+    update viscosity
+    set viscosity_unit_id = #{viscosityUnitId,jdbcType=INTEGER},
+      viscosity_value_id = #{viscosityValueId,jdbcType=INTEGER},
+      liquid_id = #{liquidId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

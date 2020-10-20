@@ -1,7 +1,7 @@
 package com.cup.wang.airport.service;
 
 import com.cup.wang.airport.mapper.PhysicalQuantityTypeMapper;
-import com.cup.wang.airport.model.PhysicalQuantityType;
+import com.cup.wang.airport.model.unit.PhysicalQuantityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

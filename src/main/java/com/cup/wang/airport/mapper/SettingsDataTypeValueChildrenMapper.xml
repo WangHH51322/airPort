@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.SettingsDataTypeValueChildrenMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="variable_name" jdbcType="VARCHAR" property="variableName" />
@@ -21,13 +21,13 @@
     delete from settings_data_type_value_children
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
     insert into settings_data_type_value_children (id, name, variable_name, 
       type, value_id)
     values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{variableName,jdbcType=VARCHAR}, 
       #{type,jdbcType=VARCHAR}, #{valueId,jdbcType=INTEGER})
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
     insert into settings_data_type_value_children
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -64,7 +64,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
     update settings_data_type_value_children
     <set>
       <if test="name != null">
@@ -82,7 +82,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.SettingsDataTypeValueChildren">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren">
     update settings_data_type_value_children
     set name = #{name,jdbcType=VARCHAR},
       variable_name = #{variableName,jdbcType=VARCHAR},

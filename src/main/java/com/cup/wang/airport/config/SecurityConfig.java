@@ -1,7 +1,7 @@
 package com.cup.wang.airport.config;
 
-import com.cup.wang.airport.model.Hr;
-import com.cup.wang.airport.model.RespBean;
+import com.cup.wang.airport.model.utils.Hr;
+import com.cup.wang.airport.model.utils.RespBean;
 import com.cup.wang.airport.service.HrService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

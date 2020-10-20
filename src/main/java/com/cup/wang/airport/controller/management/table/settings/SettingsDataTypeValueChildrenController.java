@@ -1,6 +1,6 @@
 package com.cup.wang.airport.controller.management.table.settings;
 
-import com.cup.wang.airport.model.SettingsDataTypeValueChildren;
+import com.cup.wang.airport.model.settingsData.SettingsDataTypeValueChildren;
 import com.cup.wang.airport.service.SettingsDataTypeValueChildrenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

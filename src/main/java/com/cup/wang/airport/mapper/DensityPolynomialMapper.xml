@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.DensityPolynomialMapper">
-    <resultMap id="PolynomialResultMap" type="com.cup.wang.airport.model.DensityPolynomial" >
+    <resultMap id="PolynomialResultMap" type="com.cup.wang.airport.model.density.DensityPolynomial" >
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="density_id" property="densityId" jdbcType="INTEGER" />
         <result column="x0" property="x0" jdbcType="DOUBLE" />
@@ -13,7 +13,7 @@
         <result column="x4" property="x4" jdbcType="DOUBLE" />
         <result column="x5" property="x5" jdbcType="DOUBLE" />
     </resultMap>
-    <parameterMap id="RelativeParameterMap" type="com.cup.wang.airport.model.DensityPolynomial">
+    <parameterMap id="RelativeParameterMap" type="com.cup.wang.airport.model.density.DensityPolynomial">
         <parameter property="id" resultMap="RelativeResultMap"/>
         <parameter property="densityId" resultMap="RelativeResultMap"/>
         <parameter property="x0" resultMap="RelativeResultMap"/>
@@ -27,7 +27,7 @@
         select * from density_polynomial;
     </select>
     <select id="getDensityPolynomialById" parameterType="java.lang.Integer" resultMap="PolynomialResultMap">
-        select * from density_polynomial where id=#{id,jdbcType=INTEGER};
+        select * from density_polynomial where density_id=#{id,jdbcType=INTEGER};
     </select>
     <update id="updateDensityPolynomial" parameterMap="RelativeParameterMap">
         update density_polynomial

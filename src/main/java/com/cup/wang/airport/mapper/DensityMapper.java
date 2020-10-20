@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.Density;
+import com.cup.wang.airport.model.density.Density;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

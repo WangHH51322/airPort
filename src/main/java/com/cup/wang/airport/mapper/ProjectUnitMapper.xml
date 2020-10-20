@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.ProjectUnitMapper">
-  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.ProjectUnit">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.project.ProjectUnit">
     <id column="id" jdbcType="INTEGER" property="id" />
     <result column="project_variable" jdbcType="VARCHAR" property="projectVariable" />
     <result column="variable_name" jdbcType="VARCHAR" property="variableName" />
@@ -28,7 +28,7 @@
     delete from project_unit
     where id = #{id,jdbcType=INTEGER}
   </delete>
-  <insert id="insert" parameterType="com.cup.wang.airport.model.ProjectUnit">
+  <insert id="insert" parameterType="com.cup.wang.airport.model.project.ProjectUnit">
     insert into project_unit (id, project_variable, variable_name, 
       variable_unit_id, variable_unit_type, project_id
       )
@@ -36,7 +36,7 @@
       #{variableUnitId,jdbcType=INTEGER}, #{variableUnitType,jdbcType=INTEGER}, #{projectId,jdbcType=INTEGER}
       )
   </insert>
-  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.ProjectUnit">
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.project.ProjectUnit">
     insert into project_unit
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -79,7 +79,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.ProjectUnit">
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.project.ProjectUnit">
     update project_unit
     <set>
       <if test="projectVariable != null">
@@ -100,7 +100,7 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.ProjectUnit">
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.project.ProjectUnit">
     update project_unit
     set project_variable = #{projectVariable,jdbcType=VARCHAR},
       variable_name = #{variableName,jdbcType=VARCHAR},

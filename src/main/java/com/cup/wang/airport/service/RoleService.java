@@ -2,7 +2,7 @@ package com.cup.wang.airport.service;
 
 
 import com.cup.wang.airport.mapper.RoleMapper;
-import com.cup.wang.airport.model.Role;
+import com.cup.wang.airport.model.utils.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

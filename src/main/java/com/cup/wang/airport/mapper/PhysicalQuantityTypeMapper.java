@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.PhysicalQuantityType;
+import com.cup.wang.airport.model.unit.PhysicalQuantityType;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.cup.wang.airport.controller.config;
 
 
-import com.cup.wang.airport.model.Menu;
+import com.cup.wang.airport.model.utils.Menu;
 import com.cup.wang.airport.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.ViscosityConstantMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.viscosity.ViscosityConstant">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="value" jdbcType="DOUBLE" property="value" />
+    <result column="viscosity_id" jdbcType="INTEGER" property="viscosityId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, value, viscosity_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from viscosity_constant
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getAllViscosityConstants" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from viscosity_constant
+    </select>
+    <select id="getViscosityConstantByDensityId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from viscosity_constant
+        where viscosity_id = #{did,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from viscosity_constant
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.viscosity.ViscosityConstant">
+    insert into viscosity_constant (id, value, viscosity_id
+      )
+    values (#{id,jdbcType=INTEGER}, #{value,jdbcType=DOUBLE}, #{viscosityId,jdbcType=INTEGER}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.viscosity.ViscosityConstant" useGeneratedKeys="true" keyProperty="id">
+    insert into viscosity_constant
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="value != null">
+        value,
+      </if>
+      <if test="viscosityId != null">
+        viscosity_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="value != null">
+        #{value,jdbcType=DOUBLE},
+      </if>
+      <if test="viscosityId != null">
+        #{viscosityId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.viscosity.ViscosityConstant">
+    update viscosity_constant
+    <set>
+      <if test="value != null">
+        value = #{value,jdbcType=DOUBLE},
+      </if>
+      <if test="viscosityId != null">
+        viscosity_id = #{viscosityId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.viscosity.ViscosityConstant">
+    update viscosity_constant
+    set value = #{value,jdbcType=DOUBLE},
+      viscosity_id = #{viscosityId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

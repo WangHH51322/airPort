@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cup.wang.airport.mapper.ValveMapper">
+  <resultMap id="BaseResultMap" type="com.cup.wang.airport.model.Valve">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="numb" jdbcType="INTEGER" property="numb" />
+    <result column="project_id" jdbcType="INTEGER" property="projectId" />
+    <result column="start_id" jdbcType="INTEGER" property="startId" />
+    <result column="start_name" jdbcType="VARCHAR" property="startName" />
+    <result column="end_id" jdbcType="INTEGER" property="endId" />
+    <result column="end_name" jdbcType="VARCHAR" property="endName" />
+    <result column="cv" jdbcType="DOUBLE" property="cv" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, numb, project_id, start_id, start_name, end_id, end_name, cv
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from valve
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+    <select id="getValvesByProjectId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from valve
+        where project_id = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from valve
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cup.wang.airport.model.Valve">
+    insert into valve (id, name, numb, 
+      project_id, start_id, start_name, 
+      end_id, end_name, cv)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{numb,jdbcType=INTEGER}, 
+      #{projectId,jdbcType=INTEGER}, #{startId,jdbcType=INTEGER}, #{startName,jdbcType=VARCHAR}, 
+      #{endId,jdbcType=INTEGER}, #{endName,jdbcType=VARCHAR}, #{cv,jdbcType=DOUBLE})
+  </insert>
+  <insert id="insertSelective" parameterType="com.cup.wang.airport.model.Valve">
+    insert into valve
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="numb != null">
+        numb,
+      </if>
+      <if test="projectId != null">
+        project_id,
+      </if>
+      <if test="startId != null">
+        start_id,
+      </if>
+      <if test="startName != null">
+        start_name,
+      </if>
+      <if test="endId != null">
+        end_id,
+      </if>
+      <if test="endName != null">
+        end_name,
+      </if>
+      <if test="cv != null">
+        cv,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="numb != null">
+        #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="projectId != null">
+        #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="startId != null">
+        #{startId,jdbcType=INTEGER},
+      </if>
+      <if test="startName != null">
+        #{startName,jdbcType=VARCHAR},
+      </if>
+      <if test="endId != null">
+        #{endId,jdbcType=INTEGER},
+      </if>
+      <if test="endName != null">
+        #{endName,jdbcType=VARCHAR},
+      </if>
+      <if test="cv != null">
+        #{cv,jdbcType=DOUBLE},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.cup.wang.airport.model.Valve">
+    update valve
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="numb != null">
+        numb = #{numb,jdbcType=INTEGER},
+      </if>
+      <if test="projectId != null">
+        project_id = #{projectId,jdbcType=INTEGER},
+      </if>
+      <if test="startId != null">
+        start_id = #{startId,jdbcType=INTEGER},
+      </if>
+      <if test="startName != null">
+        start_name = #{startName,jdbcType=VARCHAR},
+      </if>
+      <if test="endId != null">
+        end_id = #{endId,jdbcType=INTEGER},
+      </if>
+      <if test="endName != null">
+        end_name = #{endName,jdbcType=VARCHAR},
+      </if>
+      <if test="cv != null">
+        cv = #{cv,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.cup.wang.airport.model.Valve">
+    update valve
+    set name = #{name,jdbcType=VARCHAR},
+      numb = #{numb,jdbcType=INTEGER},
+      project_id = #{projectId,jdbcType=INTEGER},
+      start_id = #{startId,jdbcType=INTEGER},
+      start_name = #{startName,jdbcType=VARCHAR},
+      end_id = #{endId,jdbcType=INTEGER},
+      end_name = #{endName,jdbcType=VARCHAR},
+      cv = #{cv,jdbcType=DOUBLE}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

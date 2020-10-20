@@ -3,13 +3,13 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.cup.wang.airport.mapper.DensityFittingMapper">
-    <resultMap id="FittingResultMap" type="com.cup.wang.airport.model.DensityFitting" >
+    <resultMap id="FittingResultMap" type="com.cup.wang.airport.model.density.DensityFitting" >
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="density_id" property="densityId" jdbcType="INTEGER" />
         <result column="density" property="density" jdbcType="DOUBLE" />
         <result column="temperature" property="temperature" jdbcType="DOUBLE" />
     </resultMap>
-    <parameterMap id="FittingParameterMap" type="com.cup.wang.airport.model.DensityFitting">
+    <parameterMap id="FittingParameterMap" type="com.cup.wang.airport.model.density.DensityFitting">
         <parameter property="id" resultMap="FittingResultMap"/>
         <parameter property="densityId" resultMap="FittingResultMap"/>
         <parameter property="density" resultMap="FittingResultMap"/>
@@ -35,6 +35,24 @@
             </if>
         </set>
         where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateDensityFittings" parameterMap="FittingParameterMap" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="densityFittings" item="item" index="index" open="" close="" separator=";">
+            update
+            density_fitting set
+            <trim prefix="" suffix=" " suffixOverrides=",">
+                <if test="item.densityId != null">
+                    density_id = #{item.densityId,jdbcType=INTEGER},
+                </if>
+                <if test="item.density != null">
+                    density = #{item.density,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    temperature = #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+            where id = #{item.id}
+        </foreach>
     </update>
     <insert id="addDensityFitting" parameterMap="FittingParameterMap" useGeneratedKeys="true" keyProperty="id">
         insert into density_fitting
@@ -66,6 +84,39 @@
                 #{temperature,jdbcType=DOUBLE},
             </if>
         </trim>
+    </insert>
+    <insert id="addDensityFittingsByDensityId" parameterMap="FittingParameterMap" useGeneratedKeys="true" keyProperty="id">
+        <foreach collection="densityFittings" item="item" index="index" open="" close="" separator=";">
+            insert into density_fitting
+            <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    id,
+                </if>
+                <if test="item.densityId != null">
+                    density_id,
+                </if>
+                <if test="item.density != null">
+                    density,
+                </if>
+                <if test="item.temperature != null">
+                    temperature,
+                </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="item.id != null">
+                    #{item.id,jdbcType=INTEGER},
+                </if>
+                <if test="item.densityId != null">
+                    #{item.densityId,jdbcType=INTEGER},
+                </if>
+                <if test="item.density != null">
+                    #{item.density,jdbcType=DOUBLE},
+                </if>
+                <if test="item.temperature != null">
+                    #{item.temperature,jdbcType=DOUBLE},
+                </if>
+            </trim>
+        </foreach>
     </insert>
     <delete id="deleteDensityFittingById" parameterType="java.lang.Integer">
         delete from density_fitting

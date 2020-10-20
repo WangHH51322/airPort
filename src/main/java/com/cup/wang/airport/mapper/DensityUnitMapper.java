@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.DensityUnit;
+import com.cup.wang.airport.model.density.DensityUnit;
 
 import java.util.List;
 

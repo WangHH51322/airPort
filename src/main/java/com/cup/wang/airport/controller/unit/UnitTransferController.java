@@ -1,6 +1,6 @@
 package com.cup.wang.airport.controller.unit;
 
-import com.cup.wang.airport.model.UnitTransfer;
+import com.cup.wang.airport.model.unit.UnitTransfer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,6 +1,6 @@
 package com.cup.wang.airport.mapper;
 
-import com.cup.wang.airport.model.QuantityUnit;
+import com.cup.wang.airport.model.unit.QuantityUnit;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
