@@ -6,22 +6,23 @@ import com.cup.wang.airport.mapper.*;
 import com.cup.wang.airport.model.Node;
 import com.cup.wang.airport.model.Pipe;
 import com.cup.wang.airport.model.Valve;
-import com.cup.wang.airport.model.density.DensityFitting;
-import com.cup.wang.airport.service.DensityFittingService;
+import com.cup.wang.airport.simulator.others.ExcelInput;
+import com.cup.wang.airport.simulator.others.MatrixSolver;
 import com.cup.wang.airport.simulator.simulate.FixedFunctions;
 import com.cup.wang.airport.simulator.simulate.NetWork;
-import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
+import no.uib.cipr.matrix.*;
+import no.uib.cipr.matrix.sparse.*;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.ejml.simple.SimpleMatrix;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 class AirportApplicationTests {
@@ -51,10 +52,10 @@ class AirportApplicationTests {
 
         long startTime = System.currentTimeMillis();
         FixedFunctions fixedFunctions = new FixedFunctions();
-        fixedFunctions.setDx(18.0);
+        fixedFunctions.setDx(10.0);
         fixedFunctions.setDt(1.0);
         fixedFunctions.setA(1214.0);
-        fixedFunctions.setT(4);
+        fixedFunctions.setT(21);
 
         fixedFunctions.setCoefficientMatrix(netWork);
 
@@ -63,13 +64,15 @@ class AirportApplicationTests {
         double[][] Qn = fixedFunctions.getQn();
         double[][] Hn = fixedFunctions.getHn();
         double[] Hin = fixedFunctions.getHin();
+        double[][] Xout = fixedFunctions.getXout();
+        double[][] Anew = fixedFunctions.getMatrixNewBee();
 
         long endTime = System.currentTimeMillis();
         System.out.println("计算时间:" + (endTime - startTime));
 
         long startTime3 = System.currentTimeMillis();
         /*excel*/
-        String filePath = "D:\\121.xlsx";
+        String filePath = "D:\\zexcel\\121.xlsx";
         SXSSFWorkbook sxssfWorkbook = null;
         BufferedOutputStream outputStream = null;
 
@@ -82,6 +85,8 @@ class AirportApplicationTests {
             SXSSFSheet sheetQn = sxssfWorkbook.getSheetAt(2);
             SXSSFSheet sheetHn = sxssfWorkbook.getSheetAt(3);
             SXSSFSheet sheetHin = sxssfWorkbook.getSheetAt(4);
+            SXSSFSheet sheetXout = sxssfWorkbook.getSheetAt(5);
+            SXSSFSheet sheetAnew = sxssfWorkbook.getSheetAt(6);
             for (int z = 0; z < matrix.length; z++) {
                 SXSSFRow row = sheet.createRow(z);
                 for (int j = 0; j < matrix[z].length; j++) {
@@ -109,6 +114,18 @@ class AirportApplicationTests {
             SXSSFRow row1 = sheetHin.createRow(0);
             for (int z = 0; z < Hin.length; z++) {
                 row1.createCell(z).setCellValue(Hin[z]);
+            }
+            for (int z = 0; z < Xout.length; z++) {
+                SXSSFRow row = sheetXout.createRow(z);
+                for (int j = 0; j < Xout[z].length; j++) {
+                    row.createCell(j).setCellValue(Xout[z][j]);
+                }
+            }
+            for (int z = 0; z < Anew.length; z++) {
+                SXSSFRow row = sheetAnew.createRow(z);
+                for (int j = 0; j < Anew[z].length; j++) {
+                    row.createCell(j).setCellValue(Anew[z][j]);
+                }
             }
             outputStream = new BufferedOutputStream(new FileOutputStream(filePath));
             sxssfWorkbook.write(outputStream);
@@ -146,6 +163,8 @@ class AirportApplicationTests {
             workbook.createSheet("Qn");
             workbook.createSheet("Hn");
             workbook.createSheet("Hin");
+            workbook.createSheet("Xout");
+            workbook.createSheet("Anew");
             workbook.write(outputStream);
         } catch (Exception e) {
             e.printStackTrace();
@@ -395,6 +414,173 @@ class AirportApplicationTests {
 
         }
 
+    }
+
+    @Test
+    void MTJ() throws IterativeSolverNotConvergedException {
+//        double[][] a = {{1,2,0,0},{0,-2,1,1},{0,0,2,1},{0,0,1,0}};
+//        double[] b = {3,0,5,1};
+//        double[] x = {1,1,2,3};
+        double[][] a = {{0,1,2,0},{1,0,2,3},{0,1,0,1},{-1,2,1,0}};
+        double[] b = {4,10,5,6};
+        double[] x = {1,1,2,3};
+        double shift = 1e-10;
+
+        /*MTJ自带的迭代算法*/
+        DenseMatrix A = new DenseMatrix(a);
+        addDiagonal(A,shift);
+        DenseVector B = new DenseVector(b);
+        DenseVector X = new DenseVector(x);
+        ILU M = new ILU(new CompRowMatrix(A));
+        M.setMatrix(new FlexCompRowMatrix(A));
+        BiCGstab biCGstab = new BiCGstab(X);
+        biCGstab.setPreconditioner(M);
+        biCGstab.solve(A,B,X);
+
+//        DenseLU lu = DenseLU.factorize(A);
+//        while (lu.isSingular()) {
+//            addDiagonal(A, shift);
+//            lu = DenseLU.factorize(A);
+//        }
+
+
+
+
+//        CompRowMatrix Anew = new CompRowMatrix(A);
+//        ILU ilu = new ILU(Anew);
+//        ilu.setMatrix(Anew);
+//        Vector apply = ilu.apply(B, X);
+//        Vector vectorEntries = ilu.transApply(B, X);
+//        System.out.println("apply" + apply);
+//        System.out.println("vectorEntries" + vectorEntries);
+
+        long startTime5 = System.currentTimeMillis();
+
+//        GMRES gmres = new GMRES(X,2000);
+//        gmres.setPreconditioner(M);
+//        gmres.solve(A,B,X);
+
+
+        long endTime5 = System.currentTimeMillis();
+        System.out.println("迭代求解计算时间:" + (endTime5 - startTime5));
+        System.out.println("X" + X);
+    }
+
+    //主对角线不为0
+    protected void addDiagonal(Matrix A, double shift) {
+        int n = A.numRows(), m = A.numColumns();
+        for (int i = 0; i < Math.min(n, m); ++i){
+            if (A.get(i,i) == 0){
+                A.set(i, i, shift);
+            }
+        }
+    }
+
+    @Test
+    void Bicgstab() throws IterativeSolverNotConvergedException {
+
+        /*从excel中获取数据*/
+        ExcelInput excelInput = new ExcelInput("D:\\zexcel\\12333.xlsx");
+        Map temp = excelInput.read();
+        List<List<String>> data1 = (List<List<String>>) temp.get("Sheet1");
+        List<List<String>> data2 = (List<List<String>>) temp.get("Sheet2");
+
+        /*赋值给数组*/
+        double[][] A = new double[data1.size()][data1.get(0).size()];
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[i].length; j++) {
+                A[i][j] = Double.parseDouble(data1.get(i).get(j));
+            }
+        }
+        double[] B = new double[data2.size()];
+        double[] X = new double[data2.size()];
+        for (int i = 0; i < B.length; i++) {
+            B[i] = Double.parseDouble(data2.get(i).get(0));
+            X[i] = B[i];
+        }
+
+        /*开始迭代计算*/
+        long startTime3 = System.currentTimeMillis();
+        /*师兄迭代*/
+//        MatrixSolver matrixSolver = new MatrixSolver();
+//        matrixSolver.BiCGSTAB(A,B,X);
+
+        /*MTJ中Bicgstab迭代*/
+        DenseMatrix Anew = new DenseMatrix(A);
+        DenseVector Bnew = new DenseVector(B);
+        DenseVector Xnew = new DenseVector(X);
+        BiCGstab biCGstab = new BiCGstab(Xnew);
+
+        /*预处理*/
+//        long startTime2 = System.currentTimeMillis();
+//        ILU ilu = new ILU(new CompRowMatrix(Anew));
+//        ilu.setMatrix(new FlexCompRowMatrix(Anew));
+//        biCGstab.setPreconditioner(ilu);
+//        long endTime2 = System.currentTimeMillis();
+//        System.out.println("iLU预处理时间:" + (endTime2 - startTime2));
+
+        /*迭代计算*/
+//        biCGstab.solve(Anew,Bnew,Xnew);
+        biCGstab.solve(new FlexCompRowMatrix(Anew),new SparseVector(Bnew),Xnew);
+        long endTime3 = System.currentTimeMillis();
+        System.out.println("迭代计算时间:" + (endTime3 - startTime3));
+
+        /*将结果输出*/
+        for (int i = 0; i < X.length; i++) {
+            X[i] = Xnew.get(i);
+        }
+
+        /*输出excel*/
+        String filePath = "D:\\zexcel\\test.xlsx";
+        SXSSFWorkbook sxssfWorkbook = null;
+        BufferedOutputStream outputStream = null;
+        try {
+            //这样表示SXSSFWorkbook只会保留100条数据在内存中，其它的数据都会写到磁盘里，这样的话占用的内存就会很少
+            sxssfWorkbook = new SXSSFWorkbook(getXSSFWorkbookTest(filePath),100);
+            //获取第2个Sheet页
+            SXSSFSheet sheetX = sxssfWorkbook.getSheetAt(1);
+            for (int z = 0; z < X.length; z++) {
+                SXSSFRow row = sheetX.createRow(z);
+                row.createCell(0).setCellValue(X[z]);
+            }
+            outputStream = new BufferedOutputStream(new FileOutputStream(filePath));
+            sxssfWorkbook.write(outputStream);
+            outputStream.flush();
+            sxssfWorkbook.dispose();// 释放workbook所占用的所有windows资源
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if(outputStream!=null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static XSSFWorkbook getXSSFWorkbookTest(String filePath) {
+        XSSFWorkbook workbook =  null;
+        BufferedOutputStream outputStream = null;
+        try {
+            File fileXlsxPath = new File(filePath);
+            outputStream = new BufferedOutputStream(new FileOutputStream(fileXlsxPath));
+            workbook = new XSSFWorkbook();
+            workbook.createSheet("系数矩阵");
+            workbook.createSheet("X");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            if(outputStream!=null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return workbook;
     }
 
 }

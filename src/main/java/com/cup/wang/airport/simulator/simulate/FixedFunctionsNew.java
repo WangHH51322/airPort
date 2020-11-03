@@ -3,24 +3,22 @@ package com.cup.wang.airport.simulator.simulate;
 import com.cup.wang.airport.model.Node;
 import com.cup.wang.airport.model.Pipe;
 import com.cup.wang.airport.model.Valve;
-import com.cup.wang.airport.simulator.others.MatrixSolver;
-import com.cup.wang.airport.test.Decomposition;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import no.uib.cipr.matrix.*;
-import no.uib.cipr.matrix.sparse.*;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import no.uib.cipr.matrix.sparse.GMRES;
+import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
 import org.ejml.simple.SimpleMatrix;
 
-import javax.xml.namespace.QName;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.cup.wang.airport.test.Gauss_Seidel_Iterate.Gauss_Seidel_method;
-import static com.cup.wang.airport.test.Gauss_Seidel_Iterate.cal_error;
 
 /**
  * @author Qing
@@ -31,7 +29,7 @@ import static com.cup.wang.airport.test.Gauss_Seidel_Iterate.cal_error;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FixedFunctions implements Serializable {
+public class FixedFunctionsNew implements Serializable {
 
     private Double dx;
     private Double dt;
@@ -63,8 +61,6 @@ public class FixedFunctions implements Serializable {
     private double[][] Xout;
     //优化后矩阵
     private double[][] matrixNewBee;
-
-
     //阀门流量系数
 
     public void setCoefficientMatrix (NetWork netWork) throws IterativeSolverNotConvergedException {
@@ -767,7 +763,7 @@ public class FixedFunctions implements Serializable {
             }
 
 
-            if (mm < 20){
+            if (mm < 21){
 
                 /*未优化直接求解*/
 //                long startTime = System.currentTimeMillis();
@@ -849,11 +845,11 @@ public class FixedFunctions implements Serializable {
 //                SparseVector Bnew = new SparseVector(Bold);
 
                 //行压缩格式
-                CompRowMatrix Anew = new CompRowMatrix(Aold);
+//                CompRowMatrix Anew = new CompRowMatrix(Aold);
                 //列压缩格式
 //                CompColMatrix Anew = new CompColMatrix(Aold);
                 //弹性压缩矩阵
-//                FlexCompRowMatrix Anew = new FlexCompRowMatrix(Aold);
+                FlexCompRowMatrix Anew = new FlexCompRowMatrix(Aold);
                 //弹性压缩矩阵
 //                FlexCompColMatrix Anew = new FlexCompColMatrix(Aold);
                 //对角压缩格式
@@ -873,8 +869,8 @@ public class FixedFunctions implements Serializable {
 //                ilu.setMatrix(new FlexCompRowMatrix(Aold));
 
                 /*22222222222*/
-                ILU ilu = new ILU(Anew);
-                ilu.setMatrix(Aold);
+//                ILU ilu = new ILU(Anew);
+//                ilu.setMatrix(Aold);
 //                Vector apply = ilu.apply(Bnew, Xnew);
 //                Vector vectorEntries = ilu.transApply(Bnew, Xnew);
 //                System.out.println("apply" + apply);
@@ -892,7 +888,7 @@ public class FixedFunctions implements Serializable {
 
                 GMRES gmres = new GMRES(Xnew,200);
 //                gmres.setIterationMonitor(defaultIterationMonitor);
-                gmres.setPreconditioner(ilu);
+//                gmres.setPreconditioner(ilu);
                 gmres.solve(Anew,Bnew,Xnew);
 
 //                QMR qmr = new QMR(Bnew);
@@ -1146,6 +1142,11 @@ public class FixedFunctions implements Serializable {
         this.pipeLength = pipeLength;
         this.pipeSegments = pipeSegments;
         this.pipeSegmentsLength = pipeSegmentsLength;
+    }
+
+    public void nodeType(NetWork netWork){
+
+
     }
 
     protected void addDiagonal(Matrix A, double shift) {

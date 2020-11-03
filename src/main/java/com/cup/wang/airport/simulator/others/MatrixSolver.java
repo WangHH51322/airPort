@@ -99,7 +99,7 @@ public class MatrixSolver {
         double omega=-1;
         double alpha=-1;
 
-        int maxIterations=500;//最大迭代次数
+        int maxIterations=1000;//最大迭代次数
         int iteration=0;
         double[][] result = new double[maxIterations][ALength];
         while (true){
@@ -157,7 +157,7 @@ public class MatrixSolver {
 
 
             norm=Math.sqrt(norm);
-            if (norm<1e-5){
+            if (norm<1e-3){
                 for (int i = 0; i < ALength; i++) {
                     X[i]=X[i]+alpha*p[i];
                     result[iteration-1][i] = X[i];
@@ -207,7 +207,7 @@ public class MatrixSolver {
                     sumR+=r[i]*r[i];
                 }
                 sumR=Math.sqrt(sumR);
-                if (sumR/sumNorm<1e-8){
+                if (sumR/sumNorm<1e-3){
                     System.out.println("迭代次数:" + iteration);
                     break;
                 }
@@ -217,7 +217,7 @@ public class MatrixSolver {
         }
 
         /*excel*/
-        String filePath = "D:\\bicgstab.xlsx";
+        String filePath = "D:\\zexcel\\bicgstab.xlsx";
         SXSSFWorkbook sxssfWorkbook = null;
         BufferedOutputStream outputStream = null;
 
