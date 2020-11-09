@@ -3,15 +3,15 @@ package com.cup.wang.airport.simulator.simulate;
 import com.cup.wang.airport.model.Node;
 import com.cup.wang.airport.model.Pipe;
 import com.cup.wang.airport.model.Valve;
+import com.cup.wang.airport.simulator.others.MatrixSolver;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
-import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import no.uib.cipr.matrix.sparse.GMRES;
-import no.uib.cipr.matrix.sparse.IterativeSolverNotConvergedException;
+import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.*;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.Serializable;
@@ -35,6 +35,9 @@ public class FixedFunctionsNew implements Serializable {
     private Double dt;
     private Double a;
     private Integer t;
+    /*初始参数值*/
+    private Double Q0;
+    private Double H0;
     //管段长度数组
     private double[] pipeLength;
     //各管段分段数
@@ -105,183 +108,233 @@ public class FixedFunctionsNew implements Serializable {
         double[][] pipeSegmentsLength = new double[pipeCount][];
         //每根管段最右一段长度
         double[] dxn = new double[pipeCount];
-        //系数矩阵
+
 
 
         long startTime0 = System.currentTimeMillis();
 
-        for (int i = 0; i < pipeLength.length; i++) {
-            //每根管段的长度
+        /*管网的基本信息*/
+        double[] pipeRoughness = new double[pipeCount];//管段粗糙度
+        double[] diameter = new double[pipeCount];//管径
+        List<Pipe> pipes = netWork.getPipes();//管段列表
+        for (int i = 0; i < pipeCount; i++) {
+            /*管段粗糙度\管径*/
+            pipeRoughness[i] = pipes.get(i).getRoughness();
+            diameter[i] = pipes.get(i).getOutsideDiameter() - pipes.get(i).getThickness();
+            /*每根管段的长度*/
             pipeLength[i] = netWork.getPipes().get(i).getLength();
-            //各管段的内径
+            /*各管段的内径*/
             outsideDiameter[i] = netWork.getPipes().get(i).getOutsideDiameter();
             thickness[i] = netWork.getPipes().get(i).getThickness();
             insideDiameter[i] = outsideDiameter[i] - thickness[i]*2;
-            //各管段的流通面积
+            /*各管段的流通面积*/
             area[i] = Math.PI * insideDiameter[i] * insideDiameter[i] / 4;
-            //各管段运动方差中H的系数
+            /*各管段运动方差中H的系数*/
             gwdt[i] = g * area[i] * dt / dx;
-            //各管段动量方程中Q的系数
-            Qcoef2[i] = a * a * dt / (g * area[i] * dx);
-            //每根管段的分段数
+            /*各管段动量方程中Q的系数*/
+            Qcoef2[i] = a * a * dt / (g * area[i] * dx) / 50000;
+            /*每根管段的分段数*/
             int n = (int) Math.floor(pipeLength[i] / dx);
             dxn[i] = pipeLength[i] - n * dx;
             if (dxn[i] < dx/2){
                 pipeSegments[i] = n;
-                pipeSegmentsLength[i] = new double[pipeSegments[i]];
-                //每根管段的分段的长度
-                for (int j = 0; j < pipeSegmentsLength[i].length; j++) {
-                    if (j == pipeSegmentsLength[i].length - 1){
-                        pipeSegmentsLength[i][j] = dx + dxn[i];
-                    } else {
-                        pipeSegmentsLength[i][j] = dx;
-                    }
-                }
+                dxn[i] = dx + dxn[i];
             } else {
                 pipeSegments[i] = n+1;
-                pipeSegmentsLength[i] = new double[pipeSegments[i]];
-                for (int j = 0; j < pipeSegmentsLength[i].length; j++) {
-                    if (j == pipeSegmentsLength[i].length - 1){
-                        pipeSegmentsLength[i][j] = dxn[i];
-                    } else {
-                        pipeSegmentsLength[i][j] = dx;
-                    }
-                }
             }
             sum += pipeSegments[i];
         }
+        for (int i = 0; i < dxn.length; i++) {
+            System.out.println("dxn[i]的长度" + dxn[i]);
+        }
 
-        //系数矩阵
+        /*系数矩阵*/
         double[][] matrix = new double[sum*2 + pipeCount + 4*valveCount][sum*2 + pipeCount + 4*valveCount];
 
-        /*运动方差中H的系数*/
-        int rowNumb1 = 0;
-        int colNumb1 = sum + pipeCount;
+        /*对节点在管网中的特点进行分类*/
+        Map<Integer,Map<String,List<Integer>>> nodeConnections = new HashMap<>();
+        Map<Integer,Map<String,List<Integer>>> pipeAndValveConnections = new HashMap<>();
+        /*管段起终点Q和H的列编号*/
+        int colNumbForPipeQ = 0;  //Q列计数
+        int colNumbForPipeH = (sum+pipeCount) + 2*valveCount;  //H列计数
+        /*首先给节点关联管段起终点*/
         for (int i = 0; i < pipeCount; i++) {
-            for (int j = 0; j < pipeSegments[i]-1; j++) {
-                if (j == pipeSegments[i] - 2) {
-                    matrix[rowNumb1 + j][colNumb1 + j] = -gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
-                    matrix[rowNumb1 + j][colNumb1 + j + 1] = gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
-                } else {
-                    matrix[rowNumb1 + j][colNumb1 + j] = -gwdt[i];
-                    matrix[rowNumb1 + j][colNumb1 + j + 1] = gwdt[i];
+            /*将管段起点节点的信息和与之相连的管段编号存储到Map中*/
+            Integer startId = netWork.getPipes().get(i).getStartId();
+            if (nodeConnections.containsKey(startId)){
+                if (nodeConnections.get(startId).containsKey("in")){
+                    nodeConnections.get(startId).get("in").add(i);
+                }else {
+                    List<Integer> pipeNumb = new ArrayList<>();
+                    pipeNumb.add(i);
+                    nodeConnections.get(startId).put("in",pipeNumb);
                 }
+            }else {
+                Map<String,List<Integer>> inAndOut = new HashMap<>();
+                List<Integer> pipeNumb = new ArrayList<>();
+                pipeNumb.add(i);
+                inAndOut.put("in",pipeNumb);
+                nodeConnections.put(startId,inAndOut);
             }
-            rowNumb1 += 2*pipeSegments[i] - 1;
-            colNumb1 += pipeSegments[i];
+            /*将管段终点节点的信息和与之相连的管段编号存储到Map中*/
+            Integer endId = netWork.getPipes().get(i).getEndId();
+            if (nodeConnections.containsKey(endId)){
+                if (nodeConnections.get(endId).containsKey("out")){
+                    nodeConnections.get(endId).get("out").add(i);
+                }else {
+                    List<Integer> pipeNumb = new ArrayList<>();
+                    pipeNumb.add(i);
+                    nodeConnections.get(endId).put("out",pipeNumb);
+                }
+            }else {
+                Map<String,List<Integer>> inAndOut = new HashMap<>();
+                List<Integer> pipeNumb = new ArrayList<>();
+                pipeNumb.add(i);
+                inAndOut.put("out",pipeNumb);
+                nodeConnections.put(endId,inAndOut);
+            }
+            /*将管段起终点节点对应的系数矩阵节点存储到Map中*/
+            /*Q*/
+            Map<String,List<Integer>> inAndOutQ = new HashMap<>();
+            List<Integer> startAndEndQ = new ArrayList<>();  //用来存放Q部分的列编号
+            startAndEndQ.add(colNumbForPipeQ);    //管段起点Q2对应的列编号
+            startAndEndQ.add(colNumbForPipeQ + pipeSegments[i]);    //管段终点Qn+2对应的列编号
+            inAndOutQ.put("Q",startAndEndQ);    //一开始Map内还没有管段i
+            pipeAndValveConnections.put(i,inAndOutQ);   //将Q部分的列编号存入Map
+            /*H*/
+            List<Integer> startAndEndH = new ArrayList<>();  //用来存放H部分的列编号
+            startAndEndH.add(colNumbForPipeH);    //管段起点H2对应的列编号1
+            startAndEndH.add(colNumbForPipeH + 1);    //管段起点H3对应的列编号2
+            startAndEndH.add(colNumbForPipeH + pipeSegments[i] - 2);    //管段终点Hn对应的列编号1
+            startAndEndH.add(colNumbForPipeH + pipeSegments[i] - 1);    //管段终点Hn+1对应的列编号2
+            pipeAndValveConnections.get(i).put("H",startAndEndH);   //将H部分的列编号存入Map
+            /*更新colNumbForQ和colNumbForH*/
+            colNumbForPipeQ += (pipeSegments[i] + 1);
+            colNumbForPipeH += pipeSegments[i];
         }
-        /*动量方程中Q和H的系数*/
-        int rowNumb2 = pipeSegments[0] - 1;
-        int colNumb21 = 0;
-        int colNumb22 = sum + pipeCount;
-        for (int i = 0; i < pipeCount; i++) {
-            for (int j = 0; j < pipeSegments[i]; j++) {
-                if (j == pipeSegments[i] - 1) {
-                    matrix[rowNumb2 + j][colNumb21 + j] = -Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
-                    matrix[rowNumb2 + j][colNumb21 + j + 1] = Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
-                } else {
-                    matrix[rowNumb2 + j][colNumb21 + j] = -Qcoef2[i];
-                    matrix[rowNumb2 + j][colNumb21 + j + 1] = Qcoef2[i];
-                }
-                matrix[rowNumb2 + j][colNumb22 + j] = 1;
-            }
-            if (i != pipeCount - 1){
-                rowNumb2 = rowNumb2 + pipeSegments[i] + pipeSegments[i+1] - 1;
-            }
-            colNumb21 += pipeSegments[i] + 1;
-            colNumb22 += pipeSegments[i];
-        }
 
-        /*管段的外边界点和节点关联*/
-        List<Map<String,Object>> connections = new ArrayList<Map<String,Object>>();
-        //管段列表
-        List<Pipe> pipes = netWork.getPipes();
-        int rowNumb31 = 0;
-        int rowNumb32 = sum + pipeCount;
-        int rowNumb321 = sum + pipeCount + 1;
-        int rowNumb33 = -1;
-        int rowNumb34 = sum + pipeCount - 2;
-        int rowNumb35 = sum + pipeCount - 1;
-        //记录各个管段入口节点在系数矩阵中的编号
-        int[] inPipeNumb = new int[pipeCount];
-        //管段粗糙度
-        double[] pipeRoughness = new double[pipeCount];
-        //管径
-        double[] diameter = new double[pipeCount];
-        for (int i = 0; i < pipeCount; i++) {
-            rowNumb33 += pipeSegments[i] + 1;
-            rowNumb34 += pipeSegments[i];
-            rowNumb35 += pipeSegments[i];
-
-            //管段粗糙度\管径
-            pipeRoughness[i] = pipes.get(i).getRoughness();
-            diameter[i] = pipes.get(i).getOutsideDiameter() - pipes.get(i).getThickness();
-
-            Map<String,Object> connection = new HashMap<String, Object>();
-            String start = String.valueOf(0 + pipes.get(i).getStartId());//管段起点编号
-            String end = String.valueOf(0 - pipes.get(i).getEndId());//管段终点编号
-            int[] qAndHStart = {rowNumb31 , rowNumb32 , rowNumb321};//管段入口处Q2,H2,H3
-            inPipeNumb[i] = rowNumb31;//管段入口处Q2,用于后面计算管段摩阻
-            int[] qAndHEnd = {rowNumb33 , rowNumb34 , rowNumb35};//管段出口处Qn+2,Hn,Hn+1
-            //在三通处,某个节点可能同时是两根管段的起点或终点,则用 & 符号进行区分
-            for (int j = 0; j < i; j++) {
-                if (connections.get(j).containsKey(start)){
-                    start += "&";
-                }
-                if (connections.get(j).containsKey(end)){
-                    end += "&";
-                }
-            }
-//            System.out.println("start:" + start);
-//            System.out.println("起点Q" + rowNumb31);
-//            System.out.println("起点H1" + rowNumb32);
-//            System.out.println("起点H2" + rowNumb321);
-//            System.out.println("end:" + end);
-//            System.out.println("终点Q" + rowNumb33);
-//            System.out.println("终点H1" + rowNumb34);
-//            System.out.println("终点H2" + rowNumb35);
-            connection.put(start,qAndHStart);
-            connection.put(end,qAndHEnd);
-            connections.add(connection);
-
-            rowNumb31 += pipeSegments[i] + 1;
-            rowNumb32 += pipeSegments[i];
-            rowNumb321 += pipeSegments[i];
-        }
-        //阀门列表
-        List<Valve> valves = netWork.getValves();
-        int colNumb31 = 2*sum + pipeCount;
+        /*阀门起终点Q和H的列编号*/
+        int colNumbForValveQ = sum + pipeCount;  //Q列计数
+        int colNumbForValveH = 2*sum + pipeCount + 2*valveCount;  //H列计数
+        /*再给节点关联阀门起终点*/
         for (int i = 0; i < valveCount; i++) {
-            Map<String,Object> connection = new HashMap<String, Object>();
-            String start = String.valueOf(0 + valves.get(i).getStartId());//管段起点编号
-            start += "$";
-            String end = String.valueOf(0 - valves.get(i).getEndId());//管段终点编号
-            end += "$";
-            //在三通处,某个节点可能同时是两根管段的起点或终点,则用 & 符号进行区分
-            for (int j = 0; j < pipeCount; j++) {
-                if (connections.get(j).containsKey(String.valueOf(0 + valves.get(i).getStartId()))){
-                    start += "&";
+            /*将管段起点节点的信息和与之相连的管段编号存储到Map中*/
+            Integer startId = netWork.getValves().get(i).getStartId();
+            if (nodeConnections.containsKey(startId)){
+                if (nodeConnections.get(startId).containsKey("in")){
+                    nodeConnections.get(startId).get("in").add(pipeCount+i);
+                }else {
+                    List<Integer> valveNumb = new ArrayList<>();
+                    valveNumb.add(pipeCount+i);
+                    nodeConnections.get(startId).put("in",valveNumb);
                 }
-                if (connections.get(j).containsKey(String.valueOf(0 - valves.get(i).getEndId()))){
-                    end += "&";
-                }
+            }else {
+                Map<String,List<Integer>> inAndOut = new HashMap<>();
+                List<Integer> valveNumb = new ArrayList<>();
+                valveNumb.add(pipeCount+i);
+                inAndOut.put("in",valveNumb);
+                nodeConnections.put(startId,inAndOut);
             }
-            int[] qAndHStart = {colNumb31 , colNumb31+1};//Q1,H1
-            int[] qAndHEnd = {colNumb31+2 , colNumb31+3};//Q2,H2
-//            System.out.println("start:" + start);
-//            System.out.println("起点Q" + colNumb31);
-//            System.out.println("起点H" + (colNumb31+1));
-//            System.out.println("end:" + end);
-//            System.out.println("终点Q" + (colNumb31+2));
-//            System.out.println("终点H" + (colNumb31+3));
-            connection.put(start,qAndHStart);
-            connection.put(end,qAndHEnd);
-            connections.add(connection);
-
-            colNumb31 += 4;//每个阀有进出两个节点,即4个未知数
+            /*将管段终点节点的信息和与之相连的管段编号存储到Map中*/
+            Integer endId = netWork.getValves().get(i).getEndId();
+            if (nodeConnections.containsKey(endId)){
+                if (nodeConnections.get(endId).containsKey("out")){
+                    nodeConnections.get(endId).get("out").add(pipeCount+i);
+                }else {
+                    List<Integer> valveNumb = new ArrayList<>();
+                    valveNumb.add(pipeCount+i);
+                    nodeConnections.get(endId).put("out",valveNumb);
+                }
+            }else {
+                Map<String,List<Integer>> inAndOut = new HashMap<>();
+                List<Integer> valveNumb = new ArrayList<>();
+                valveNumb.add(pipeCount+i);
+                inAndOut.put("out",valveNumb);
+                nodeConnections.put(endId,inAndOut);
+            }
+            /*将阀门起终点节点对应的系数矩阵节点存储到Map中*/
+            /*Q*/
+            Map<String,List<Integer>> inAndOutQ = new HashMap<>();
+            List<Integer> startAndEndQ = new ArrayList<>();  //用来存放Q部分的列编号
+            startAndEndQ.add(colNumbForValveQ);    //阀门起点Q对应的列编号
+            startAndEndQ.add(colNumbForValveQ + 1);    //管段终点Q对应的列编号
+            inAndOutQ.put("Q",startAndEndQ);    //一开始Map内还没有管段i
+            pipeAndValveConnections.put((i + pipeCount),inAndOutQ);   //将Q部分的列编号存入Map
+            /*H*/
+            List<Integer> startAndEndH = new ArrayList<>();  //用来存放H部分的列编号
+            startAndEndH.add(colNumbForValveH);    //管段起点H对应的列编号
+            startAndEndH.add(colNumbForValveH + 1);    //管段终点H对应的列编号
+            pipeAndValveConnections.get(i + pipeCount).put("H",startAndEndH);   //将H部分的列编号存入Map
+            /*更新colNumbForQ和colNumbForH*/
+            colNumbForValveQ += 2;
+            colNumbForValveH += 2;
         }
-//        System.out.println("元件个数:" + connections.size());
+//        for (Integer in : nodeConnections.get(2).get("in")) {
+//            System.out.println("以节点2作为入口的元件有:" + in);
+//        }
+//        for (Integer q : pipeAndValveConnections.get(2).get("H")) {
+//            System.out.println("管段3的起终点H列坐标" + q);
+//        }
+//        for (Integer h : pipeAndValveConnections.get(3).get("Q")) {
+//            System.out.println("阀门的起终点Q列坐标" + h);
+//        }
 
+
+        /*系数矩阵填充系数*/
+        /*管段部分填充*/
+        /*动量方程中Q和H的系数*/
+        int rowNumbForDong = 0;    //第一根管段动量方程的行编号
+        int colNumbForDongQ = 0;    //第一根管段动量方程Q2的列编号
+        int colNumbForDongH = sum + pipeCount + 2*valveCount;   //第一根管段动量方程H2的列编号
+        /*运动方程中H的系数*/
+        int rowNumbForYun = sum + pipeCount + 2*valveCount + 1;   //第一根管段运动方程的行编号
+        int colNumbForYunH = sum + pipeCount + 2*valveCount;   //第一根管段运动方程H2的列编号
+        for (int i = 0; i < pipeCount; i++) {
+            /*动量、运动方程部分系数补齐*/
+            for (int j = 0; j < pipeSegments[i]; j++) {
+                if (j < pipeSegments[i] - 2){
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j] = -Qcoef2[i];
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j + 1] = Qcoef2[i];
+                    matrix[rowNumbForYun + j][colNumbForYunH + j] = -gwdt[i];
+                    matrix[rowNumbForYun + j][colNumbForYunH + j + 1] = gwdt[i];
+                }else if (j == pipeSegments[i] - 2){
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j] = -Qcoef2[i];
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j + 1] = Qcoef2[i];
+                    matrix[rowNumbForYun + j][colNumbForYunH + j] = -gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
+                    matrix[rowNumbForYun + j][colNumbForYunH + j + 1] = gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
+                }else if(j == pipeSegments[i] - 1){
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j] = -Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
+                    matrix[rowNumbForDong + j][colNumbForDongQ + j + 1] = Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
+                }
+//                if (j == pipeSegments[i] - 1) {
+//                    matrix[rowNumbForDong + j][colNumbForDongQ + j] = -Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
+//                    matrix[rowNumbForDong + j][colNumbForDongQ + j + 1] = Qcoef2[i] * dx / (dxn[i] / 2 + dx / 2);
+//                } else {
+//                    matrix[rowNumbForDong + j][colNumbForDongQ + j] = -Qcoef2[i];
+//                    matrix[rowNumbForDong + j][colNumbForDongQ + j + 1] = Qcoef2[i];
+//                }
+                matrix[rowNumbForDong + j][colNumbForDongH + j] = 1;
+            }
+            /*动量方程行列编号自增*/
+            rowNumbForDong += (pipeSegments[i] + 1);
+            colNumbForDongQ += (pipeSegments[i] + 1);
+            colNumbForDongH += pipeSegments[i];
+            /*运动方程行列编号自增*/
+            rowNumbForYun += pipeSegments[i];
+            colNumbForYunH += pipeSegments[i];
+            /*运动方程部分系数补齐*/
+//            for (int j = 0; j < pipeSegments[i]-1; j++) {
+//                if (j == pipeSegments[i] - 2) {
+//                    matrix[rowNumbForYun + j][colNumbForYunH + j] = -gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
+//                    matrix[rowNumbForYun + j][colNumbForYunH + j + 1] = gwdt[i] * dx / (dxn[i] / 2 + dx / 2);
+//                } else {
+//                    matrix[rowNumbForYun + j][colNumbForYunH + j] = -gwdt[i];
+//                    matrix[rowNumbForYun + j][colNumbForYunH + j + 1] = gwdt[i];
+//                }
+//            }
+//            rowNumbForYun += pipeSegments[i];
+//            colNumbForYunH += pipeSegments[i];
+        }
 
         /**
          * 获取全部节点
@@ -291,14 +344,14 @@ public class FixedFunctionsNew implements Serializable {
         /*瞬态压力流量初始化*/
         double[][] Qn = new double[times + 1][sum + pipeCount + 2*valveCount];
         double[][] Hn = new double[times + 1][sum + 2 * (pipeCount + valveCount)];
-        //方程右端向量
+        /*方程右端向量*/
         double[][] b = new double[sum*2 + pipeCount + 4*valveCount][1];
 
         for (int i = 0; i < Qn[0].length; i++) {
-            Qn[0][i] = 80;
+            Qn[0][i] = this.Q0;
         }
         for (int i = 0; i < Hn[0].length; i++) {
-            Hn[0][i] = 80;
+            Hn[0][i] = this.H0;
         }
 
         //摩阻
@@ -329,11 +382,12 @@ public class FixedFunctionsNew implements Serializable {
 
             /*管段摩阻计算*/
             long startTime1 = System.currentTimeMillis();
-            for (int i = 0; i < inPipeNumb.length; i++) {
-                calculateLambda.calculate(Qn[mm][inPipeNumb[i]],diameter[i],viscosity,pipeRoughness[i]);
+            for (int i = 0; i < pipeCount; i++) {
+                int pipeInNumb = pipeAndValveConnections.get(i).get("Q").get(0);    //管段入口节点在系数矩阵中的编号
+                calculateLambda.calculate(Qn[mm][pipeInNumb] / 50000,diameter[i],viscosity,pipeRoughness[i]);
                 lambda[i] = calculateLambda.getLambda();
                 m[i] = calculateLambda.getM();
-                System.out.println("管段入口"+ i + "处流量:" + Qn[mm][inPipeNumb[i]]);
+                System.out.println("管段入口"+ i + "处流量:" + Qn[mm][pipeInNumb]);
                 System.out.println("管段"+ i + "处摩阻:" + lambda[i]);
                 System.out.println("管段"+ i + "处m:" + m[i]);
             }
@@ -342,14 +396,15 @@ public class FixedFunctionsNew implements Serializable {
 
             long startTime2 = System.currentTimeMillis();
             /*运动方程Q的系数*/
-            int rowNumb51 = 0;
-            int colNumb51 = 1;
+            int rowNumbForYun2 = sum + pipeCount + 2*valveCount + 1;   //第一根管段运动方程的行编号
+            int colNumbForYunQ = 1;   //第一根管段运动方程Q3的列编号
             for (int i = 0; i < pipeCount; i++) {
                 for (int j = 0; j < pipeSegments[i] - 1; j++) {
-                    matrix[rowNumb51 + j][colNumb51 + j] = (1 + lambda[i] * g * area[i] * dt * Math.pow(Math.abs(Qn[mm][colNumb51 + j]), (1 -m[i])));
+                    matrix[rowNumbForYun2 + j][colNumbForYunQ + j] = (1 + lambda[i] * g * area[i] * dt * Math.pow(Math.abs(Qn[mm][colNumbForYunQ + j] / 50000), (1 -m[i]))) / 50000;
                 }
-                rowNumb51 += 2*pipeSegments[i] - 1;
-                colNumb51 += pipeSegments[i] + 1;
+                /*系数自增*/
+                rowNumbForYun2 += pipeSegments[i];
+                colNumbForYunQ += pipeSegments[i] + 1;
             }
 
             /**
@@ -359,452 +414,481 @@ public class FixedFunctionsNew implements Serializable {
 //                nodes.get(4).setFlow(0.0067);
 //            }
 
-            /*左边界条件*/
-            //系数矩阵--边界条件
-            int colNumb7 = 2*sum - pipeCount + 2*valveCount;
-            for (int i = 0; i < nodes.size(); i++) {
-                //节点类型
-                Integer nodeType = nodes.get(i).getNodeType();
-                //节点编号
-                Integer numb = nodes.get(i).getNumb();
-                if (nodeType == 1){//入口--定压
-                    String s1 = String.valueOf(0 + numb);
-                    for (int j = 0; j < connections.size(); j++) {
-                        if (connections.get(j).get(s1) != null){
-                            int[] x = (int[]) connections.get(j).get(s1);
-                            //入口边界条件
-                            matrix[colNumb7][x[1]] = 1.5;
-                            matrix[colNumb7][x[2]] = -0.5;
-                            b[colNumb7][0] = nodes.get(i).getPressure()/(rou * g);
-//                            System.out.println("入口坐标");
-//                            for (int k = 0; k < x.length; k++) {
-//                                System.out.println(x[k]);
-//                            }
-                        }
-                    }
-                    colNumb7 += 1;
-                } else if (nodeType == 3){//普通中间节点
-                    //中间节点起点
-                    String s31 = String.valueOf(0 + numb);
-                    String s311 = s31 + "&";
-                    //阀门进入口
-                    String s312 = s31 + "$";
-                    String s313 = s312 + "&";
-                    //中间节点终点
-                    String s32 = String.valueOf(0 - numb);
-                    String s321 = s32 + "&";
-                    //阀门进入口
-                    String s322 = s32 + "$";
-                    String s323 = s322 + "$";
-                    //判断是否为三通处(与弯头处不同,多一个内边界点条件)
-                    int panduan = 0;
-
-                    for (int j = 0; j < connections.size(); j++) {
-                        if (connections.get(j).get(s31) != null){
-                            int panduan1 = 0;
-                            int[] x = (int[]) connections.get(j).get(s31);
-
-                            for (int jj = 0; jj < connections.size(); jj++) {
-                                if (connections.get(jj).get(s311) != null ){
-                                    int[] xx = (int[]) connections.get(jj).get(s311);
-                                    //内节点边界条件()
-                                    //压力平衡1
-                                    matrix[colNumb7][xx[1]] = -1.5;
-                                    matrix[colNumb7][xx[2]] = 0.5;
-                                    b[colNumb7][0] = 0;
-                                    //压力平衡2
-                                    matrix[colNumb7 + 2][x[1]] = -1.5;
-                                    matrix[colNumb7 + 2][x[2]] = 0.5;
-                                    matrix[colNumb7 + 2][xx[1]] = 1.5;
-                                    matrix[colNumb7 + 2][xx[2]] = -0.5;
-                                    b[colNumb7 + 2][0] = 0;
-                                    //流量平衡
-                                    matrix[colNumb7 + 1][x[0]] = -1;
-                                    matrix[colNumb7 + 1][xx[0]] = -1;
-                                    b[colNumb7 + 1][0] = 0;
-                                    panduan1 = 1;
-                                    panduan = 1;
-                                }
-                                if (connections.get(jj).get(s313) != null ){
-                                    int[] xx = (int[]) connections.get(jj).get(s313);
-                                    //内节点边界条件()
-                                    //压力平衡1
-                                    matrix[colNumb7][xx[1]] = -1;
-                                    b[colNumb7][0] = 0;
-                                    //压力平衡2
-                                    matrix[colNumb7 + 2][x[1]] = -1.5;
-                                    matrix[colNumb7 + 2][x[2]] = 0.5;
-                                    matrix[colNumb7 + 2][xx[1]] = 1;
-                                    b[colNumb7 + 2][0] = 0;
-                                    //流量平衡
-                                    matrix[colNumb7 + 1][x[0]] = -1;
-                                    matrix[colNumb7 + 1][xx[0]] = -1;
-                                    b[colNumb7 + 1][0] = 0;
-                                    panduan1 = 1;
-                                    panduan = 1;
-                                }
-                            }
-                            if (panduan1 == 0){
-                                //内节点边界条件()
-                                //压力平衡
-                                matrix[colNumb7][x[1]] = -1.5;
-                                matrix[colNumb7][x[2]] = 0.5;
-                                b[colNumb7][0] = 0;
-                                //流量平衡
-                                matrix[colNumb7 + 1][x[0]] = -1;
-                                b[colNumb7 + 1][0] = 0;
-//                                System.out.println("中间点起点坐标");
-//                                for (int k = 0; k < x.length; k++) {
-//                                    System.out.println(x[k]);
-//                                }
-                            }
-                        } else if (connections.get(j).get(s312) != null){
-                            int[] x = (int[]) connections.get(j).get(s312);
-                            //压力平衡
-                            matrix[colNumb7][x[1]] = -1;
-                            b[colNumb7][0] = 0;
-                            //流量平衡
-                            matrix[colNumb7 + 1][x[0]] = -1;
-                            b[colNumb7 + 1][0] = 0;
-                        }
-
-                        if (connections.get(j).get(s32) != null){
-                            int panduan2 = 0;
-                            int[] x = (int[]) connections.get(j).get(s32);
-
-                            for (int jj = 0; jj < connections.size(); jj++) {
-                                if (connections.get(jj).get(s321) != null ){
-                                    int[] xx = (int[]) connections.get(jj).get(s321);
-                                    //内节点边界条件()
-                                    //压力平衡1
-                                    matrix[colNumb7][xx[1]] = -0.5;
-                                    matrix[colNumb7][xx[2]] = 1.5;
-                                    b[colNumb7][0] = 0;
-                                    //压力平衡2
-                                    matrix[colNumb7 + 2][x[1]] = 0.5;
-                                    matrix[colNumb7 + 2][x[2]] = -1.5;
-                                    matrix[colNumb7 + 2][xx[1]] = -0.5;
-                                    matrix[colNumb7 + 2][xx[2]] = 1.5;
-                                    b[colNumb7 + 2][0] = 0;
-                                    //流量平衡
-                                    matrix[colNumb7 + 1][x[0]] = 1;
-                                    matrix[colNumb7 + 1][xx[0]] = 1;
-                                    b[colNumb7 + 1][0] = 0;
-                                    panduan2 = 1;
-                                    panduan = 1;
-                                }
-                                if (connections.get(jj).get(s323) != null ){
-                                    int[] xx = (int[]) connections.get(jj).get(s323);
-                                    //内节点边界条件()
-                                    //压力平衡1
-                                    matrix[colNumb7][xx[1]] = 1;
-                                    b[colNumb7][0] = 0;
-                                    //压力平衡2
-                                    matrix[colNumb7 + 2][x[1]] = 0.5;
-                                    matrix[colNumb7 + 2][x[2]] = -1.5;
-                                    matrix[colNumb7 + 2][xx[1]] = 1;
-                                    b[colNumb7 + 2][0] = 0;
-                                    //流量平衡
-                                    matrix[colNumb7 + 1][x[0]] = 1;
-                                    matrix[colNumb7 + 1][xx[0]] = 1;
-                                    b[colNumb7 + 1][0] = 0;
-//                                    System.out.println("双入口");
-                                    panduan2 = 1;
-                                    panduan = 1;
-                                }
-                            }
-                            if (panduan2 == 0){
-                                //内节点边界条件()
-                                //压力平衡
-                                matrix[colNumb7][x[1]] = -0.5;
-                                matrix[colNumb7][x[2]] = 1.5;
-                                b[colNumb7][0] = 0;
-                                //流量平衡
-                                matrix[colNumb7 + 1][x[0]] = 1;
-                                b[colNumb7 + 1][0] = 0;
-//                                System.out.println("中间点终点坐标");
-//                                for (int k = 0; k < x.length; k++) {
-//                                    System.out.println(x[k]);
-//                                }
-
-                            }
-                        } else if (connections.get(j).get(s322) != null){
-                            int[] x = (int[]) connections.get(j).get(s322);
-                            //压力平衡
-                            matrix[colNumb7][x[1]] = 1;
-                            b[colNumb7][0] = 0;
-                            //流量平衡
-                            matrix[colNumb7 + 1][x[0]] = 1;
-                            b[colNumb7 + 1][0] = 0;
-                        }
-                    }
-                    if (panduan == 1){
-                        colNumb7 += 3;
-                    } else {
-                        colNumb7 += 2;
-                    }
-
-                } else if (nodeType == 2){//出口
-                    int panduan = 0;
-                    String s2 = String.valueOf(0 - numb);
-                    String s22 = String.valueOf(0 + numb);
-                    String s23 = s2 + "&";
-                    String s21 = s2 + "$";
-                    for (int j = 0; j < connections.size(); j++) {
-                        if (connections.get(j).get(s2) != null){
-                            int[] x = (int[]) connections.get(j).get(s2);
-                            for (int jj = 0; jj < connections.size(); jj++) {
-                                if (connections.get(jj).get(s22) != null){
-                                    int[] xx = (int[]) connections.get(jj).get(s22);
-                                    //出口边界条件(定流)
-                                    matrix[colNumb7][x[0]] = 1;
-                                    matrix[colNumb7][xx[0]] = -1;
-                                    b[colNumb7][0] = nodes.get(i).getFlow();
-                                    //压力平衡
-                                    matrix[colNumb7 + 1][x[1]] = 1.5;
-                                    matrix[colNumb7 + 1][x[2]] = -0.5;
-                                    matrix[colNumb7 + 1][xx[1]] = -1.5;
-                                    matrix[colNumb7 + 1][xx[2]] = 0.5;
-                                    panduan = 1;
-                                } else if (connections.get(jj).get(s23) != null){
-                                    int[] xx = (int[]) connections.get(jj).get(s22);
-                                    //出口边界条件(定流)
-                                    matrix[colNumb7][x[0]] = 1;
-                                    matrix[colNumb7][xx[0]] = 1;
-                                    b[colNumb7][0] = nodes.get(i).getFlow();
-                                    //压力平衡
-                                    matrix[colNumb7 + 1][x[1]] = 1.5;
-                                    matrix[colNumb7 + 1][x[2]] = -0.5;
-                                    matrix[colNumb7 + 1][xx[1]] = -1.5;
-                                    matrix[colNumb7 + 1][xx[2]] = 0.5;
-                                    panduan = 1;
-                                }
-                            }
-                            //出口边界条件(定流)
-                            matrix[colNumb7][x[0]] = 1;
-                            //if (mm >= 10 && i == 4){
-                            //b[colNumb7][0] = 0;
-                            //}else{
-                            b[colNumb7][0] = nodes.get(i).getFlow();
-                            //}
-//                            System.out.println("出口坐标");
-//                            for (int k = 0; k < x.length; k++) {
-//                                System.out.println(x[k]);
-//                            }
-                        } else if (connections.get(j).get(s21) != null){
-                            int[] x = (int[]) connections.get(j).get(s21);
-                            //出口边界条件(定流)
-                            matrix[colNumb7][x[0]] = 1;
-                            b[colNumb7][0] = nodes.get(i).getFlow();
-                        }
-                    }
-                    if (panduan == 1){
-                        colNumb7 += 2;
-                    }else {
-                        colNumb7 += 1;
-                    }
-                }
-            }
-
-
-            /*阀门进出口压力流量关系系数*/
-            int rowNumb4 = 2*sum - pipeCount;
-            int rowNumb44 = sum + pipeCount;
-            for (int i = 0; i < valveCount; i++) {
-                String start = String.valueOf(0 + valves.get(i).getStartId());//管段起点编号
-                start += "$";
-                if ( !connections.get(pipeCount + i).containsKey(start) ){
-                    start += "&";
-                }
-                int[] x1 = (int[]) connections.get(pipeCount + i).get(start);//阀门入口参数:Q1,H1
-
-                String end = String.valueOf(0 - valves.get(i).getEndId());//管段终点编号
-                end += "$";
-                if ( !connections.get(pipeCount + i).containsKey(end) ){
-                    end += "&";
-                }
-                int[] x2 = (int[]) connections.get(pipeCount + i).get(end);//阀门出口参数:Q2,H2
-
-                //阀门进出口流量平衡
-                matrix[rowNumb4][x1[0]] = 1;
-                matrix[rowNumb4][x2[0]] = -1;
-                b[rowNumb4][0] = 0;
-                rowNumb4 ++;
-                //阀门进出口压力平衡
-                matrix[rowNumb4][x1[1]] = 1;
-                matrix[rowNumb4][x2[1]] = -1;
-                matrix[rowNumb4][x1[0]] = -1 * Qn[mm][rowNumb44]/ (2*g*cv*cv);
-                b[rowNumb4][0] = 0;
-                rowNumb44 += 2;//阀门入口流量在Qn中隔一个排列
-                rowNumb4 ++;
-            }
 
             /*方程组右端向量*/
-            int rowNumb61 = 0;
-            int rowNumb62 = 1;
-            int rowNumb63 = pipeSegments[0] - 1;
-            int rowNumb64 = 1;
+            int rowNumbRigntB1 = 0;     //右端向量b的行编号
+            int rowNumbRigntB2 = sum + pipeCount + 2*valveCount + 1;    //右端向量b的行编号
+            int rowNumbQn = 1;
+            int rowNumbHn = 1;
             for (int i = 0; i < pipeCount; i++) {
                 for (int j = 0; j < pipeSegments[i] - 1; j++) {
-                    b[rowNumb61 + j][0] = Qn[mm][rowNumb62 + j];
-                    b[rowNumb63 + j][0] = Hn[mm][rowNumb64 + j];
+                    b[rowNumbRigntB1 + j][0] = Hn[mm][rowNumbHn + j];
+                    b[rowNumbRigntB2 + j][0] = Qn[mm][rowNumbQn + j] / 50000;
                 }
-                b[rowNumb63 + pipeSegments[i] - 1][0] = Hn[mm][rowNumb64 + pipeSegments[i] - 1];
+                b[rowNumbRigntB1 + pipeSegments[i] - 1][0] = Hn[mm][rowNumbHn + pipeSegments[i] - 1];
 
-                rowNumb61 += 2*pipeSegments[i] - 1;
-                rowNumb62 += pipeSegments[i] + 1;
-                if (i != pipeCount - 1){
-                    rowNumb63 = rowNumb63 + pipeSegments[i] + pipeSegments[i+1] -1;
-                }
-                rowNumb64 = rowNumb64 + pipeSegments[i] + 2;
+                rowNumbRigntB1 += pipeSegments[i] + 1;
+                rowNumbRigntB2 += pipeSegments[i];
+                rowNumbQn += pipeSegments[i] + 1;
+                rowNumbHn += pipeSegments[i] + 2;
             }
 
-            //未优化前的矩阵
+            /*阀门进出口边界条件*/
+            int rowNumbValveBoundaryQ = sum + pipeCount + 1;     //流量边界条件行编号
+            int rowNumbValveBoundaryH = 2*sum + pipeCount + 2*valveCount;    //压力边界条件行编号
+            for (int i = 0; i < valveCount; i++) {
+                /*阀门出口流量平衡*/
+                Integer valveEndId = netWork.getValves().get(i).getEndId();   //阀门出口节点编号
+                int elementStartNumb = 0;   //此节点连接的元件数
+                /*中间节点:有进有出*/
+                if (nodeConnections.get(valveEndId).containsKey("in") && nodeConnections.get(valveEndId).containsKey("out")){
+                    elementStartNumb = nodeConnections.get(valveEndId).get("in").size()
+                            + nodeConnections.get(valveEndId).get("out").size();
+                }
+                /*中间节点:弯头*/
+                if (elementStartNumb == 2){
+                    System.out.println("阀门" + (i+1)+ "出口节点是弯头");
+                    Integer in = nodeConnections.get(valveEndId).get("in").get(0);     //元件编号(元件入口)
+                    Integer out = nodeConnections.get(valveEndId).get("out").get(0);   //元件编号(元件出口)
+                    /*流量平衡*/
+                    Integer inQ = pipeAndValveConnections.get(in).get("Q").get(0);      //入口元件起点Q2的列编号
+                    Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                    matrix[rowNumbValveBoundaryQ][inQ] = -1;
+                    matrix[rowNumbValveBoundaryQ][outQ] = 1;
+                    b[rowNumbValveBoundaryQ][0] = 0;
+                }
+                /*中间节点:三通*/
+                if (elementStartNumb == 3){
+                    System.out.println("阀门" + (i+1)+ "出口节点是三通");
+                    /*节点是一根管段的入口,两根管段的出口,此为特殊情况,需额外讨论*/
+                    if (nodeConnections.get(valveEndId).get("in").size() == 1){
+
+                        Integer in = nodeConnections.get(valveEndId).get("in").get(0);     //元件编号(元件入口)
+                        Integer out1 = nodeConnections.get(valveEndId).get("out").get(0);   //元件编号(元件出口)
+                        Integer out2 = nodeConnections.get(valveEndId).get("out").get(1);   //元件编号(元件出口)
+                        if (!nodeConnections.get(valveEndId).containsKey("used")){
+                            /*流量平衡*/
+                            Integer inQ = pipeAndValveConnections.get(in).get("Q").get(0);      //入口元件起点Q2的列编号
+                            Integer outQ1 = pipeAndValveConnections.get(out1).get("Q").get(1);      //出口元件1终点Qn+2的列编号
+                            Integer outQ2 = pipeAndValveConnections.get(out2).get("Q").get(1);      //出口元件2终点Qn+2的列编号
+                            matrix[rowNumbValveBoundaryQ][inQ] = -1;
+                            matrix[rowNumbValveBoundaryQ][outQ1] = 1;
+                            matrix[rowNumbValveBoundaryQ][outQ2] = 1;
+                            b[rowNumbValveBoundaryQ][0] = 0;
+                            /*特殊情况,此节点已经使用过流量平衡条件,不可再用,添加key:"used"表示*/
+                            List<Integer> used = new ArrayList<>();
+                            nodeConnections.get(valveEndId).put("used",used);
+                        }else {
+                            /*特殊情况,此节点已经使用过流量平衡条件,不可再用,只能使用两个out的压力平衡代替流量平衡*/
+                            /*两个出口均为管段出口*/
+                            /*此时还需要判断哪个出口跟此时的管段重合*/
+                            if (out1 < pipeCount && out2 < pipeCount){
+                                /*中间系数*/
+                                double a1 = - dxn[out1]/(dx+dxn[out1]);
+                                double a2 = (dx+2*dxn[out1])/(dx+dxn[out1]);
+                                double b1 = - dxn[out2]/(dx+dxn[out2]);
+                                double b2 = (dx+2*dxn[out2])/(dx+dxn[out2]);
+                                /*出口元件1终点Hn在Hn(mm)中的编号*/
+                                int colNumbForOut1 = 0;
+                                for (int j = 0; j < out1 + 1; j++) {
+                                    colNumbForOut1 += pipeSegments[out1];
+                                }
+                                colNumbForOut1 = 2*out1 - 1;   //出口元件1终点Hn在Hn(mm)中的编号
+                                Integer out1H1 = pipeAndValveConnections.get(out1).get("H").get(2);      //出口元件1终点Hn的列编号
+                                Integer out1Q2 = pipeAndValveConnections.get(out1).get("Q").get(1);      //出口元件1终点Qn+2的列编号
+                                Integer out1Q1 = out1Q2 - 1;      //出口元件2终点Qn+1的列编号
+                                Integer out2H1 = pipeAndValveConnections.get(out2).get("H").get(2);      //出口元件2终点Hn的列编号
+                                Integer out2H2 = pipeAndValveConnections.get(out2).get("H").get(3);      //出口元件2终点Hn+1的列编号
+                                matrix[rowNumbValveBoundaryQ][out1H1] = a1;
+                                matrix[rowNumbValveBoundaryQ][out1Q2] = -a2*Qcoef2[out1];
+                                matrix[rowNumbValveBoundaryQ][out1Q1] = a2*Qcoef2[out1];
+                                matrix[rowNumbValveBoundaryQ][out2H1] = -b1;
+                                matrix[rowNumbValveBoundaryQ][out2H2] = -b2;
+                                b[rowNumbValveBoundaryQ][0] = -a2*Hn[mm][colNumbForOut1];
+                            }
+                            /*验证是第二次使用此节点后即可删去这个key*/
+                            nodeConnections.get(valveEndId).remove("used");
+                        }
+
+                    }
+                    /*节点是一根管段的出口,两根管段的入口*/
+                    if (nodeConnections.get(valveEndId).get("in").size() == 2){
+                        Integer in1 = nodeConnections.get(valveEndId).get("in").get(0);     //元件编号(元件入口)
+                        Integer in2 = nodeConnections.get(valveEndId).get("in").get(1);     //元件编号(元件入口)
+                        Integer out = nodeConnections.get(valveEndId).get("out").get(0);   //元件编号(元件出口)
+                        /*流量平衡*/
+                        Integer inQ1 = pipeAndValveConnections.get(in1).get("Q").get(0);      //入口元件1起点Q2的列编号
+                        Integer inQ2 = pipeAndValveConnections.get(in2).get("Q").get(0);      //入口元件2起点Q2的列编号
+                        Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                        matrix[rowNumbValveBoundaryQ][inQ1] = -1;
+                        matrix[rowNumbValveBoundaryQ][inQ2] = -1;
+                        matrix[rowNumbValveBoundaryQ][outQ] = 1;
+                        b[rowNumbValveBoundaryQ][0] = 0;
+                    }
+                }
+                /*特殊节点:出口*/
+                if (elementStartNumb == 0 && nodeConnections.get(valveEndId).containsKey("out")){
+                    /*特殊节点:管网出口*/
+                    if (nodeConnections.get(valveEndId).get("out").size() == 1){
+                        System.out.println("阀门" + (i+1)+ "出口节点是管网出口");
+                        /*流量平衡*/
+                        Integer out = nodeConnections.get(valveEndId).get("out").get(0);   //元件编号(元件出口)
+                        Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                        matrix[rowNumbValveBoundaryQ][outQ] = 1;
+                        b[rowNumbValveBoundaryQ][0] = nodes.get(valveEndId - 1).getFlow();    //nodes是一个List,在list内的编号比实际编号小一
+                    }
+                    /*特殊节点:管段双出口*/
+                    if (nodeConnections.get(valveEndId).get("out").size() == 2){
+                        System.out.println("阀门" + (i+1)+ "入口节点是管段双出口");
+                    }
+                    /*特殊节点:管段三出口*/
+                    if (nodeConnections.get(valveEndId).get("out").size() == 3){
+                        System.out.println("阀门" + (i+1)+ "入口节点是管段三出口");
+                    }
+                }
+
+                /*阀门入口压力平衡*/
+                Integer valveStartId = netWork.getValves().get(i).getStartId();   //阀门入口节点编号
+                elementStartNumb = 0;
+                /*中间节点:有进有出*/
+                if (nodeConnections.get(valveStartId).containsKey("in") && nodeConnections.get(valveStartId).containsKey("out")){
+                    elementStartNumb = nodeConnections.get(valveStartId).get("in").size()
+                            + nodeConnections.get(valveStartId).get("out").size();
+                }
+                /*中间节点:弯头*/
+                if (elementStartNumb == 2) {
+                    System.out.println("阀门" + (i+1)+ "入口节点是弯头");
+                    Integer in = nodeConnections.get(valveStartId).get("in").get(0);     //元件编号(元件入口)
+                    Integer out = nodeConnections.get(valveStartId).get("out").get(0);   //元件编号(元件出口)
+                    /*出口元件是阀*/
+                    if(out >= pipeCount){
+                        /*压力平衡*/
+                        Integer inH = pipeAndValveConnections.get(in).get("H").get(0);      //入口元件起点H2的列编号
+                        Integer outH = pipeAndValveConnections.get(out).get("H").get(1);      //出口元件终点Hn的列编号
+                        matrix[rowNumbValveBoundaryH][inH] = -1;
+                        matrix[rowNumbValveBoundaryH][outH] = 1;
+                        b[rowNumbValveBoundaryH][0] = 0;
+                    }
+                    /*出口元件是管段*/
+                    if (out < pipeCount){
+                        /*压力平衡*/
+                        Integer inH = pipeAndValveConnections.get(in).get("H").get(0);      //入口元件起点H2的列编号
+                        Integer outH1 = pipeAndValveConnections.get(out).get("H").get(2);      //出口元件终点Hn的列编号
+                        Integer outH2 = pipeAndValveConnections.get(out).get("H").get(3);      //出口元件终点Hn+1的列编号
+                        matrix[rowNumbValveBoundaryH][inH] = -1;
+                        matrix[rowNumbValveBoundaryH][outH1] = - dxn[i]/(dx+dxn[i]);
+                        matrix[rowNumbValveBoundaryH][outH2] = (dx+2*dxn[i])/(dx+dxn[i]);
+                        b[rowNumbValveBoundaryH][0] = 0;
+                    }
+                }
+                /*中间节点:三通*/
+                if (elementStartNumb == 3){
+                    System.out.println("阀门" + (i+1)+ "入口节点是三通");
+                    Integer out = nodeConnections.get(valveStartId).get("out").get(0);   //元件编号(元件出口)
+                    Integer inH = pipeAndValveConnections.get(i+pipeCount).get("H").get(0);      //入口元件起点H1的列编号
+                    matrix[rowNumbValveBoundaryH][inH] = -1;
+                    b[rowNumbValveBoundaryH][0] = 0;
+                    /*出口元件是阀*/
+                    if (out >= pipeCount){
+                        /*压力平衡*/
+                        Integer outH = pipeAndValveConnections.get(out).get("H").get(1);      //出口元件终点Hn的列编号
+                        matrix[rowNumbValveBoundaryH][outH] = 1;
+                    }
+                    /*出口元件是管段*/
+                    if(out < pipeCount){
+                        /*压力平衡*/
+                        Integer outH1 = pipeAndValveConnections.get(out).get("H").get(2);      //出口元件终点Hn的列编号
+                        Integer outH2 = pipeAndValveConnections.get(out).get("H").get(3);      //出口元件终点Hn+1的列编号
+                        matrix[rowNumbValveBoundaryH][outH1] = - dxn[i]/(dx+dxn[i]);
+                        matrix[rowNumbValveBoundaryH][outH2] = (dx+2*dxn[i])/(dx+dxn[i]);
+                    }
+                }
+                /*特殊节点:入口*/
+                if (elementStartNumb == 0 && nodeConnections.get(valveStartId).containsKey("in")){
+                    /*特殊节点:管网入口*/
+                    if (nodeConnections.get(valveStartId).get("in").size() == 1){
+                        System.out.println("阀门" + (i+1)+ "入口节点是管网入口");
+                        Integer inH = pipeAndValveConnections.get(i+pipeCount).get("H").get(0);      //入口元件起点H1的列编号
+                        matrix[rowNumbValveBoundaryH][inH] = 1;
+                        b[rowNumbValveBoundaryH][0] = nodes.get(valveStartId - 1).getPressure() / rou / g;
+                    }
+                    /*特殊节点:管段双入口*/
+                    if (nodeConnections.get(valveStartId).get("in").size() == 2){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段双入口");
+                    }
+                    /*特殊节点:管段三入口*/
+                    if (nodeConnections.get(valveStartId).get("in").size() == 3){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段三入口");
+                    }
+                }
+                System.out.println("管段" + (i+1) + "入口节点连接的元件数" + elementStartNumb);
+                /*压力边界条件行编号自增*/
+                rowNumbValveBoundaryQ += 2;     //流量边界条件行编号
+                rowNumbValveBoundaryH += 2;    //压力边界条件行编号
+            }
+
+            /*阀门部分填充*/
+            /*Q的系数*/
+            int rowNumbForValveEquationQ = sum + pipeCount;    //Q的行编号
+            int colNumbForValveEquationQ = sum + pipeCount;    //Q的列编号
+            /*H的系数*/
+            int rowNumbForValveEquationH = 2*sum + pipeCount + 2*valveCount + 1;    //H的行编号
+            int colNumbForValveEquationH = 2*sum + pipeCount + 2*valveCount;    //H的列编号
+            for (int i = 0; i < valveCount; i++) {
+                matrix[rowNumbForValveEquationQ][colNumbForValveEquationQ] = 1;
+                matrix[rowNumbForValveEquationQ][colNumbForValveEquationQ + 1] = -1;
+                b[rowNumbForValveEquationQ][0] = 0;
+                matrix[rowNumbForValveEquationH][colNumbForValveEquationH] = 1;
+                matrix[rowNumbForValveEquationH][colNumbForValveEquationH + 1] = -1;
+                matrix[rowNumbForValveEquationH][colNumbForValveEquationQ] = -1 * Qn[mm][colNumbForValveEquationQ]/ (2*g*cv*cv); //随时间变化
+                b[rowNumbForValveEquationH][0] = 0;
+
+                /*编号更新*/
+                rowNumbForValveEquationQ += 2;
+                colNumbForValveEquationQ += 2;
+                rowNumbForValveEquationH += 2;
+                colNumbForValveEquationH += 2;
+            }
+
+            /*系数矩阵中边界条件的系数*/
+            /*管段进出口边界条件*/
+            int rowNumbPipeBoundaryQ = -1;     //流量边界条件行编号
+            int rowNumbPipeBoundaryH = sum + pipeCount + 2*valveCount;    //压力边界条件行编号
+            for (int i = 0; i < pipeCount; i++) {
+                /*流量边界条件行编号自增*/
+                rowNumbPipeBoundaryQ += pipeSegments[i] + 1;
+
+                /*管段出口流量平衡*/
+                Integer pipeEndId = netWork.getPipes().get(i).getEndId();   //管段出口节点编号
+                int elementStartNumb = 0;   //此节点连接的元件数
+                /*中间节点:有进有出*/
+                if (nodeConnections.get(pipeEndId).containsKey("in") && nodeConnections.get(pipeEndId).containsKey("out")){
+                    elementStartNumb = nodeConnections.get(pipeEndId).get("in").size()
+                            + nodeConnections.get(pipeEndId).get("out").size();
+                }
+                /*中间节点:弯头*/
+                if (elementStartNumb == 2){
+                    System.out.println("管段" + (i+1)+ "出口节点是弯头");
+                    Integer in = nodeConnections.get(pipeEndId).get("in").get(0);     //元件编号(元件入口)
+                    Integer out = nodeConnections.get(pipeEndId).get("out").get(0);   //元件编号(元件出口)
+                    /*流量平衡*/
+                    /*节点类型*/
+                    Integer nodeType = netWork.getNodes().get(pipeEndId - 1).getNodeType();     //管段起终点的实际编号比nodes在数组里面的序号大1
+                    Integer inQ = pipeAndValveConnections.get(in).get("Q").get(0);      //入口元件起点Q2的列编号
+                    Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                    matrix[rowNumbPipeBoundaryQ][inQ] = -1;
+                    matrix[rowNumbPipeBoundaryQ][outQ] = 1;
+                    /*普通节点*/
+                    if (nodeType == 3){
+                        b[rowNumbPipeBoundaryQ][0] = 0;
+                    }
+                    /*出口节点*/
+                    else if(nodeType == 2){
+                        b[rowNumbPipeBoundaryQ][0] = netWork.getNodes().get(pipeEndId - 1).getFlow();
+                    }
+
+                }
+                /*中间节点:三通*/
+                if (elementStartNumb == 3){
+                    System.out.println("管段" + (i+1)+ "出口节点是三通");
+                    /*节点是一根管段的入口,两根管段的出口,此为特殊情况,需额外讨论*/
+                    if (nodeConnections.get(pipeEndId).get("in").size() == 1){
+                        Integer in = nodeConnections.get(pipeEndId).get("in").get(0);     //元件编号(元件入口)
+                        System.out.println("管段" + (i+1) + "出口节点对应管段" + in + "入口");
+                        Integer out1 = nodeConnections.get(pipeEndId).get("out").get(0);   //元件编号(元件出口)
+                        System.out.println("管段" + (i+1) + "出口节点对应管段" + out1 + "出口");
+                        Integer out2 = nodeConnections.get(pipeEndId).get("out").get(1);   //元件编号(元件出口)
+                        System.out.println("管段" + (i+1) + "出口节点对应管段" + out2 + "出口");
+                        if (!nodeConnections.get(pipeEndId).containsKey("used")){
+                            /*流量平衡*/
+                            Integer inQ = pipeAndValveConnections.get(in).get("Q").get(0);      //入口元件起点Q2的列编号
+                            Integer outQ1 = pipeAndValveConnections.get(out1).get("Q").get(1);      //出口元件1终点Qn+2的列编号
+                            Integer outQ2 = pipeAndValveConnections.get(out2).get("Q").get(1);      //出口元件2终点Qn+2的列编号
+                            matrix[rowNumbPipeBoundaryQ][inQ] = -1;
+                            matrix[rowNumbPipeBoundaryQ][outQ1] = 1;
+                            matrix[rowNumbPipeBoundaryQ][outQ2] = 1;
+                            b[rowNumbPipeBoundaryQ][0] = 0;
+                            /*特殊情况,此节点已经使用过流量平衡条件,不可再用,添加key:"used"表示*/
+                            List<Integer> used = new ArrayList<>();
+                            nodeConnections.get(pipeEndId).put("used",used);
+                        }else {
+                            /*特殊情况,此节点已经使用过流量平衡条件,不可再用,只能使用两个out的压力平衡代替流量平衡*/
+                            if(out2 == i){      //这一步的目的是令此时参与计算的管段编号=out1，因为这时out2对应的管段出口已经是使用过流量平衡边界条件
+                                                //所以只能对out1使用压力平衡条件，并且把out1对应的出口条件进行分解
+                                out2 = out1;
+                                out1 = i;
+                            }
+                            /*两个出口均为管段出口*/
+                            if (out1 < pipeCount && out2 < pipeCount) {
+                                /*中间系数*/
+                                double a1 = -dxn[out1] / (dx + dxn[out1]);
+                                double a2 = (dx + 2 * dxn[out1]) / (dx + dxn[out1]);
+                                double b1 = -dxn[out2] / (dx + dxn[out2]);
+                                double b2 = (dx + 2 * dxn[out2]) / (dx + dxn[out2]);
+                                /*出口元件1终点Hn在Hn(mm)中的编号*/
+                                int colNumbForOut1 = 0;
+                                for (int j = 0; j < out1 + 1; j++) {
+                                    colNumbForOut1 += pipeSegments[j];
+                                }
+                                colNumbForOut1 += 2*out1;   //出口元件1终点Hn+1在Hn(mm)中的编号
+                                Integer out1H1 = pipeAndValveConnections.get(out1).get("H").get(2);      //出口元件1终点Hn的列编号
+                                Integer out1Q2 = pipeAndValveConnections.get(out1).get("Q").get(1);      //出口元件1终点Qn+2的列编号
+                                Integer out1Q1 = out1Q2 - 1;      //出口元件1终点Qn+1的列编号
+                                Integer out2H1 = pipeAndValveConnections.get(out2).get("H").get(2);      //出口元件2终点Hn的列编号
+                                Integer out2H2 = pipeAndValveConnections.get(out2).get("H").get(3);      //出口元件2终点Hn+1的列编号
+                                matrix[rowNumbPipeBoundaryQ][out1H1] = a1;
+                                matrix[rowNumbPipeBoundaryQ][out1Q2] = -a2*Qcoef2[out1];
+                                matrix[rowNumbPipeBoundaryQ][out1Q1] = a2*Qcoef2[out1];
+                                matrix[rowNumbPipeBoundaryQ][out2H1] = -b1;
+                                matrix[rowNumbPipeBoundaryQ][out2H2] = -b2;
+                                b[rowNumbPipeBoundaryQ][0] = -a2*Hn[mm][colNumbForOut1];
+                                System.out.println("out1被拆分的点:" + out1);
+                                System.out.println("特殊节点b:" + b[rowNumbPipeBoundaryQ][0]);
+                                System.out.println("特殊节点b:" + colNumbForOut1);
+                            }
+                            /*验证是第二次使用此节点后即可删去这个key*/
+                            nodeConnections.get(pipeEndId).remove("used");
+                        }
+
+                    }
+                    /*节点是一根管段的出口,两根管段的入口*/
+                    if (nodeConnections.get(pipeEndId).get("in").size() == 2){
+                        Integer in1 = nodeConnections.get(pipeEndId).get("in").get(0);     //元件编号(元件入口)
+                        Integer in2 = nodeConnections.get(pipeEndId).get("in").get(1);     //元件编号(元件入口)
+                        Integer out = nodeConnections.get(pipeEndId).get("out").get(0);   //元件编号(元件出口)
+                        /*流量平衡*/
+                        Integer inQ1 = pipeAndValveConnections.get(in1).get("Q").get(0);      //入口元件1起点Q2的列编号
+                        Integer inQ2 = pipeAndValveConnections.get(in2).get("Q").get(0);      //入口元件2起点Q2的列编号
+                        Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                        matrix[rowNumbPipeBoundaryQ][inQ1] = -1;
+                        matrix[rowNumbPipeBoundaryQ][inQ2] = -1;
+                        matrix[rowNumbPipeBoundaryQ][outQ] = 1;
+                        b[rowNumbPipeBoundaryQ][0] = 0;
+                    }
+                }
+                /*特殊节点:出口*/
+                if (elementStartNumb == 0 && nodeConnections.get(pipeEndId).containsKey("out")){
+                    /*特殊节点:管网出口*/
+                    if (nodeConnections.get(pipeEndId).get("out").size() == 1){
+                        System.out.println("管段" + (i+1)+ "出口节点是管网出口");
+                        /*流量平衡*/
+                        Integer out = nodeConnections.get(pipeEndId).get("out").get(0);   //元件编号(元件出口)
+                        Integer outQ = pipeAndValveConnections.get(out).get("Q").get(1);      //出口元件终点Qn+2的列编号
+                        matrix[rowNumbPipeBoundaryQ][outQ] = 1;
+                        b[rowNumbPipeBoundaryQ][0] = nodes.get(pipeEndId - 1).getFlow();    //nodes是一个List,在list内的编号比实际编号小一
+                    }
+                    /*特殊节点:管段双出口*/
+                    if (nodeConnections.get(pipeEndId).get("out").size() == 2){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段双出口");
+                    }
+                    /*特殊节点:管段三出口*/
+                    if (nodeConnections.get(pipeEndId).get("out").size() == 3){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段三出口");
+                    }
+                }
+
+                /*管段入口压力平衡*/
+                Integer pipeStartId = netWork.getPipes().get(i).getStartId();   //管段入口节点编号
+                elementStartNumb = 0;   //给elementStartNumb重新赋值,用来判断
+                /*中间节点:有进有出*/
+                if (nodeConnections.get(pipeStartId).containsKey("in") && nodeConnections.get(pipeStartId).containsKey("out")){
+                    elementStartNumb = nodeConnections.get(pipeStartId).get("in").size()
+                            + nodeConnections.get(pipeStartId).get("out").size();
+                }
+                /*中间节点:弯头*/
+                if (elementStartNumb == 2) {
+                    System.out.println("管段" + (i+1)+ "入口节点是弯头");
+                    Integer in = nodeConnections.get(pipeStartId).get("in").get(0);     //元件编号(元件入口)
+                    Integer out = nodeConnections.get(pipeStartId).get("out").get(0);   //元件编号(元件出口)
+                    /*出口元件是阀*/
+                    if(out >= pipeCount && in <pipeCount){
+                        /*压力平衡*/
+                        Integer inH1 = pipeAndValveConnections.get(in).get("H").get(0);      //入口元件起点H2的列编号
+                        Integer inH2 = pipeAndValveConnections.get(in).get("H").get(1);      //入口元件起点H3的列编号
+                        Integer outH = pipeAndValveConnections.get(out).get("H").get(1);      //出口元件终点Hn的列编号
+                        matrix[rowNumbPipeBoundaryH][inH1] = -1.5;
+                        matrix[rowNumbPipeBoundaryH][inH2] = 0.5;
+                        matrix[rowNumbPipeBoundaryH][outH] = 1;
+                        b[rowNumbPipeBoundaryH][0] = 0;
+                    }
+                    /*出口元件是管段*/
+                    if (out < pipeCount && in <pipeCount){
+                        /*压力平衡*/
+                        Integer inH1 = pipeAndValveConnections.get(in).get("H").get(0);      //入口元件起点H2的列编号
+                        Integer inH2 = pipeAndValveConnections.get(in).get("H").get(1);      //入口元件起点H3的列编号
+                        Integer outH1 = pipeAndValveConnections.get(out).get("H").get(2);      //出口元件终点Hn的列编号
+                        Integer outH2 = pipeAndValveConnections.get(out).get("H").get(3);      //出口元件终点Hn+1的列编号
+                        matrix[rowNumbPipeBoundaryH][inH1] = -1.5;
+                        matrix[rowNumbPipeBoundaryH][inH2] = 0.5;
+                        matrix[rowNumbPipeBoundaryH][outH1] = - dxn[out]/(dx+dxn[out]);
+                        matrix[rowNumbPipeBoundaryH][outH2] = (dx+2*dxn[out])/(dx+dxn[out]);
+                        b[rowNumbPipeBoundaryH][0] = 0;
+                    }
+                }
+                /*中间节点:三通*/
+                if (elementStartNumb == 3){
+                    System.out.println("管段" + (i+1)+ "入口节点是三通");
+                    Integer out = nodeConnections.get(pipeStartId).get("out").get(0);   //元件编号(元件出口)
+                    Integer inH1 = pipeAndValveConnections.get(i).get("H").get(0);      //入口元件起点H2的列编号
+                    Integer inH2 = pipeAndValveConnections.get(i).get("H").get(1);      //入口元件起点H3的列编号
+                    matrix[rowNumbPipeBoundaryH][inH1] = -1.5;
+                    matrix[rowNumbPipeBoundaryH][inH2] = 0.5;
+                    b[rowNumbPipeBoundaryH][0] = 0;
+                    /*出口元件是阀*/
+                    if (out >= pipeCount){
+                        /*压力平衡*/
+                        Integer outH = pipeAndValveConnections.get(out).get("H").get(1);      //出口元件终点Hn的列编号
+                        matrix[rowNumbPipeBoundaryH][outH] = 1;
+                    }
+                    /*出口元件是管段*/
+                    if(out < pipeCount){
+                        /*压力平衡*/
+                        Integer outH1 = pipeAndValveConnections.get(out).get("H").get(2);      //出口元件终点Hn的列编号
+                        Integer outH2 = pipeAndValveConnections.get(out).get("H").get(3);      //出口元件终点Hn+1的列编号
+                        matrix[rowNumbPipeBoundaryH][outH1] = - dxn[out]/(dx+dxn[out]);
+                        matrix[rowNumbPipeBoundaryH][outH2] = (dx+2*dxn[out])/(dx+dxn[out]);
+                    }
+                }
+                /*特殊节点:入口*/
+                if (elementStartNumb == 0 && nodeConnections.get(pipeStartId).containsKey("in")){
+                    /*特殊节点:管网入口*/
+                    if (nodeConnections.get(pipeStartId).get("in").size() == 1){
+                        System.out.println("管段" + (i+1)+ "入口节点是管网入口");
+                        Integer inH1 = pipeAndValveConnections.get(i).get("H").get(0);      //入口元件起点H2的列编号
+                        Integer inH2 = pipeAndValveConnections.get(i).get("H").get(1);      //入口元件起点H3的列编号
+                        matrix[rowNumbPipeBoundaryH][inH1] = 1.5;
+                        matrix[rowNumbPipeBoundaryH][inH2] = -0.5;
+                        b[rowNumbPipeBoundaryH][0] = nodes.get(pipeStartId - 1).getPressure() / rou / g;
+                    }
+                    /*特殊节点:管段双入口*/
+                    if (nodeConnections.get(pipeStartId).get("in").size() == 2){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段双入口");
+                    }
+                    /*特殊节点:管段三入口*/
+                    if (nodeConnections.get(pipeStartId).get("in").size() == 3){
+                        System.out.println("管段" + (i+1)+ "入口节点是管段三入口");
+                    }
+                }
+                System.out.println("管段" + (i+1) + "入口节点连接的元件数" + elementStartNumb);
+                /*压力边界条件行编号自增*/
+                rowNumbPipeBoundaryH += pipeSegments[i];
+            }
+
+            /*构建计算矩阵*/
             SimpleMatrix matrixA = new SimpleMatrix(matrix);
             SimpleMatrix matrixB = new SimpleMatrix(b);
 
-            long endTime2 = System.currentTimeMillis();
-            System.out.println("边界条件求解计算时间:" + (endTime2 - startTime2));
-//            System.out.println("matrixB" + matrixB);
-
-            /*优化矩阵结构*/
-            long startTime6 = System.currentTimeMillis();
-
-            SimpleMatrix newMatrix = new SimpleMatrix(sum*2 + pipeCount + 4*valveCount,sum*2 + pipeCount + 4*valveCount);
-            SimpleMatrix newB = new SimpleMatrix(sum*2 + pipeCount + 4*valveCount,1);
-
-            //管段矩阵优化
-            int numbRow1 = pipeSegments[0] - 1;
-            int numbRow2 = 0;
-            int numbCol1 = 0;
-            int numbCol2 = sum + pipeCount;
-            int numbNewRow = 0;
-            int numbNewCol = 0;
-            for (int i = 0; i < pipeCount; i++) {
-                for (int j = 0; j < 2*pipeSegments[i] - 1; j++) {
-                    int numbCol11 = numbCol1;
-                    int numbCol22 = numbCol2;
-                    if (j % 2 == 0){
-                        //管段节点矩阵
-                        for (int k = 0; k < 2 * pipeSegments[i] + 1; k++) {
-                            if (k % 2 == 0){
-                                newMatrix.set(numbNewRow+j,numbNewCol+k,matrixA.get(numbRow1,numbCol11));
-                                numbCol11 ++;
-                            }else {
-                                newMatrix.set(numbNewRow+j,numbNewCol+k,matrixA.get(numbRow1,numbCol22));
-                                numbCol22 ++;
-                            }
-                        }
-                        //方程右端向量
-                        newB.set(numbNewRow+j,0,matrixB.get(numbRow1,0));
-                        numbRow1++;
-                    }else {
-                        for (int k = 0; k < 2 * pipeSegments[i] + 1; k++) {
-                            if (k % 2 == 0){
-                                newMatrix.set(numbNewRow+j,numbNewCol+k,matrixA.get(numbRow2,numbCol11));
-                                numbCol11 ++;
-                            }else {
-                                newMatrix.set(numbNewRow+j,numbNewCol+k,matrixA.get(numbRow2,numbCol22));
-                                numbCol22 ++;
-                            }
-                        }
-                        newB.set(numbNewRow+j,0,matrixB.get(numbRow2,0));
-                        numbRow2++;
-                    }
-                }
-                if(i < pipeCount-1){
-                    numbRow1 = numbRow1 + pipeSegments[i+1] - 1;
-                }
-                numbRow2 = numbRow2 + pipeSegments[i];
-
-                numbCol1 = numbCol1 + pipeSegments[i] + 1;
-                numbCol2 = numbCol2 + pipeSegments[i];
-
-                numbNewRow = numbNewRow + 2*pipeSegments[i] - 1;
-                numbNewCol = numbNewCol + 2*pipeSegments[i] + 1;
-            }
-            //边界条件与元件矩阵优化
-            //侧边元件矩阵
-            for (int j = 0; j < 2*sum + pipeCount + 4*valveCount; j++) {
-                for (int i = 2*sum + pipeCount; i < 2*sum + pipeCount + 4*valveCount; i++) {
-                    newMatrix.set(j,i,matrixA.get(j,i));
-                }
-            }
-            //底部边界条件
-            for (int j = 2*sum - pipeCount; j < sum*2 + pipeCount + 4*valveCount; j++) {
-                int numbNewCol2 = 0;
-                int numbCol3 = 0;
-                int numbCol4 = sum + pipeCount;
-                for (int i = 0; i < pipeCount; i++) {
-                    for (int k = 0; k < 2 * pipeSegments[i] + 1; k++) {
-                        if (k % 2 == 0){
-                            newMatrix.set(j,numbNewCol2+k,matrixA.get(j,numbCol3));
-                            numbCol3 ++;
-                        }else {
-                            newMatrix.set(j,numbNewCol2+k,matrixA.get(j,numbCol4));
-                            numbCol4 ++;
-                        }
-                    }
-                    numbNewCol2 = numbNewCol2 + 2 * pipeSegments[i] + 1;
-                }
-            }
-            //方程右端向量优化
-            for (int i = 2*sum - pipeCount; i < sum*2 + pipeCount + 4*valveCount; i++) {
-                newB.set(i,0,matrixB.get(i,0));
-            }
-            long endTime6 = System.currentTimeMillis();
-            System.out.println("系数矩阵优化计算时间:" + (endTime6 - startTime6));
-
-            //优化：优化矩阵newMatrix转数组
-            for (int i = 0; i < matrixNew.length; i++) {
-                for (int j = 0; j < matrixNew[i].length; j++) {
-                    matrixNew[i][j] = newMatrix.get(i,j);
-                }
-            }
-
-
-            if (mm < 21){
+            if (mm < 5){
 
                 /*未优化直接求解*/
-//                long startTime = System.currentTimeMillis();
-//                result = matrixA.solve(matrixB);
-//                for(int i = 0;i < X.length;i++){
-//                    X[i] = result.get(i,0);
-//                }
-//                long endTime = System.currentTimeMillis();
-//                System.out.println("直接求解计算时间:" + (endTime - startTime));
-
-                /*优化求解*/
                 long startTime = System.currentTimeMillis();
-                result = newMatrix.solve(newB);
-                long endTime = System.currentTimeMillis();
-                System.out.println("优化直接求解计算时间:" + (endTime - startTime));
-                it1[mm] = (endTime - startTime);
-
+                result = matrixA.solve(matrixB);
                 for(int i = 0;i < X.length;i++){
                     X[i] = result.get(i,0);
                 }
-
-                //输出结果优化
-                long startTime7 = System.currentTimeMillis();
-                int numbRow4 = sum + pipeCount;
-                int numbRow5 = 0;
-                int numbNewRow3 = 0;
-                for (int i = 0; i < pipeCount; i++) {
-                    for (int j = 0; j < 2*pipeSegments[i] + 1; j++) {
-                        if (j % 2 == 0){
-                            oldResult.set(numbRow5,0,result.get(numbNewRow3+j,0));
-                            numbRow5++;
-                        }else {
-                            oldResult.set(numbRow4,0,result.get(numbNewRow3+j,0));
-                            numbRow4++;
-                        }
-                    }
-                    numbNewRow3 = numbNewRow3 + 2*pipeSegments[i] + 1;
-                }
-
-                long endTime7 = System.currentTimeMillis();
-                System.out.println("输出结果优化计算时间:" + (endTime7 - startTime7));
+                long endTime = System.currentTimeMillis();
+                System.out.println("直接求解计算时间:" + (endTime - startTime));
+                it1[mm] = (endTime - startTime);
             }
             else {
                 System.out.println("迭代计算");
@@ -814,86 +898,46 @@ public class FixedFunctionsNew implements Serializable {
                     Xout[mm][i] = X[i];
                 }
 
-//                for (int i = 0; i < B.length; i++) {
-//                    B[i] = matrixB.get(i,0);
-//                }
-                //优化：右端向量B转数组
                 for (int i = 0; i < B.length; i++) {
-                    B[i] = newB.get(i,0);
+                    B[i] = matrixB.get(i,0);
                 }
-                //优化：优化矩阵newMatrix转数组
-                for (int i = 0; i < matrixNew.length; i++) {
-                    for (int j = 0; j < matrixNew[i].length; j++) {
-                        matrixNew[i][j] = newMatrix.get(i,j);
-                    }
-                }
-                double shift = 1e-7;
-                //补齐主对角线上的零元素
-//                for (int i = 0; i < matrixNew.length; i++) {
-//                    if (matrixNew[i][i] == 0.0){
-//                        matrixNew[i][i] = shift;
-//                    }
-//                }
 
                 /*MTJ自带的迭代算法*/
-                DenseMatrix Aold = new DenseMatrix(matrixNew);
-                addDiagonal(Aold,shift);
-
+                DenseMatrix Aold = new DenseMatrix(matrix);
                 DenseVector Bnew = new DenseVector(B);
                 DenseVector Xnew = new DenseVector(X);
 
-//                SparseVector Bnew = new SparseVector(Bold);
-
                 //行压缩格式
 //                CompRowMatrix Anew = new CompRowMatrix(Aold);
-                //列压缩格式
+//                //列压缩格式
 //                CompColMatrix Anew = new CompColMatrix(Aold);
                 //弹性压缩矩阵
                 FlexCompRowMatrix Anew = new FlexCompRowMatrix(Aold);
-                //弹性压缩矩阵
+//                //弹性压缩矩阵
 //                FlexCompColMatrix Anew = new FlexCompColMatrix(Aold);
-                //对角压缩格式
+//                //对角压缩格式
 //                CompDiagMatrix Anew = new CompDiagMatrix(Aold);
-                //不压缩格式
+//                //不压缩格式
 //                LinkedSparseMatrix Anew = new LinkedSparseMatrix(Aold);
 
                 /*MTJ迭代求解*/
                 long startTime5 = System.currentTimeMillis();
 
-//                DefaultIterationMonitor defaultIterationMonitor = new DefaultIterationMonitor();
-//                defaultIterationMonitor.setAbsoluteTolerance(1e-4);
-//                defaultIterationMonitor.setRelativeTolerance(1e-3);
-//                defaultIterationMonitor.setDivergenceTolerance(1e+5);
-
-//                ILU ilu = new ILU(new CompRowMatrix(Aold));
-//                ilu.setMatrix(new FlexCompRowMatrix(Aold));
-
-                /*22222222222*/
+////
+//
+//                /*22222222222*/
+                ILU ilu = new ILU(new CompRowMatrix(Aold));
 //                ILU ilu = new ILU(Anew);
-//                ilu.setMatrix(Aold);
+                ilu.setMatrix(Aold);
 //                Vector apply = ilu.apply(Bnew, Xnew);
 //                Vector vectorEntries = ilu.transApply(Bnew, Xnew);
 //                System.out.println("apply" + apply);
 //                System.out.println("vectorEntries" + vectorEntries);
 
-//                ILUT ilu = new ILUT(Anew);
-//                ilu.setMatrix(Anew);
-
-//                ICC ilu = new ICC(Anew);
-//                ilu.setMatrix(Anew);
-
-//                AMG ilu = new AMG();
-//                ilu.setMatrix(Anew);
-
-
-                GMRES gmres = new GMRES(Xnew,200);
-//                gmres.setIterationMonitor(defaultIterationMonitor);
-//                gmres.setPreconditioner(ilu);
+                GMRES gmres = new GMRES(Xnew,2000);
+                gmres.setPreconditioner(ilu);
                 gmres.solve(Anew,Bnew,Xnew);
 
-//                QMR qmr = new QMR(Bnew);
-//                qmr.setPreconditioner(ilu);
-//                qmr.solve(Aold,Bnew,Xnew);
 
 //                BiCGstab biCGstab = new BiCGstab(Xnew);
 //                biCGstab.setPreconditioner(ilu);
@@ -915,120 +959,44 @@ public class FixedFunctionsNew implements Serializable {
                 System.out.println("迭代求解计算时间:" + (endTime5 - startTime5));
                 it2[mm] = (endTime5 - startTime5);
 
-                /*输出结果优化*/
-                long startTime8 = System.currentTimeMillis();
-                int numbRow4 = sum + pipeCount;
-                int numbRow5 = 0;
-                int numbNewRow3 = 0;
-                for (int i = 0; i < pipeCount; i++) {
-                    for (int j = 0; j < 2*pipeSegments[i] + 1; j++) {
-                        if (j % 2 == 0){
-                            oldResult.set(numbRow5,0,result.get(numbNewRow3+j,0));
-                            numbRow5++;
-                        }else {
-                            oldResult.set(numbRow4,0,result.get(numbNewRow3+j,0));
-                            numbRow4++;
-                        }
-                    }
-                    numbNewRow3 = numbNewRow3 + 2*pipeSegments[i] + 1;
-                }
-                long endTime8 = System.currentTimeMillis();
-                System.out.println("输出结果优化2计算时间:" + (endTime8 - startTime8));
-
             }
 
+            /*给下一时步的Qn\Hn赋值*/
             long startTime3 = System.currentTimeMillis();
-            int rowNumb81 = 0;
-            int rowNumb82 = 1;
-            int rowNumb83 = sum + pipeCount;
-
-//            for (int i = 0; i < pipeCount; i++) {
-//                for (int j = 0; j < pipeSegments[i] + 1; j++) {
-//                    Qn[mm + 1][rowNumb81 + j] = X[rowNumb81 + j];
-//                }
-//                rowNumb81 += pipeSegments[i] + 1;
-//                for (int j = 0; j < pipeSegments[i]; j++) {
-//                    Hn[mm + 1][rowNumb82 + j] = X[rowNumb83 + j];
-//                }
-//                Hn[mm + 1][rowNumb82 - 1] = 1.5 * Hn[mm + 1][rowNumb82] - 0.5 * Hn[mm + 1][rowNumb82 + 1];
-//                Hn[mm + 1][rowNumb82 + pipeSegments[i]] = Hn[mm + 1][rowNumb82 + pipeSegments[i] - 1] * (dx + 2 * dxn[i]) / (dx + dxn[i]) - Hn[mm + 1][rowNumb82 + pipeSegments[i] - 2] * dxn[i] / (dx + dxn[i]);
-//
-//                rowNumb82 += pipeSegments[i] + 2;
-//                rowNumb83 += pipeSegments[i];
-//            }
-//            int rowNumb84 = sum + pipeCount;
-//            int rowNumb85 = 2*sum + pipeCount;
-//            int rowNumb86 = sum + 2*pipeCount;
-//            for (int i = 0; i < valveCount; i++) {
-//                Qn[mm + 1][rowNumb84] = X[rowNumb85];
-//                Qn[mm + 1][rowNumb84 + 1] = X[rowNumb85 + 2];
-//                Hn[mm + 1][rowNumb86] = X[rowNumb85 + 1];
-//                Hn[mm + 1][rowNumb86 + 1] = X[rowNumb85 + 3];
-//                rowNumb84 += 2;
-//                rowNumb86 += 2;
-//                rowNumb85 += 4;
-//            }
-
-            /*给管段所有分段节点的Qn与Hn赋值*/
-//            for (int i = 0; i < pipeCount; i++) {
-//                for (int j = 0; j < pipeSegments[i] + 1; j++) {
-//                    Qn[mm + 1][rowNumb81 + j] = result.get(rowNumb81 + j,0);
-//                }
-//                rowNumb81 += pipeSegments[i] + 1;
-//                for (int j = 0; j < pipeSegments[i]; j++) {
-//                    Hn[mm + 1][rowNumb82 + j] = result.get(rowNumb83 + j,0);
-//                }
-//                Hn[mm + 1][rowNumb82 - 1] = 1.5 * Hn[mm + 1][rowNumb82] - 0.5 * Hn[mm + 1][rowNumb82 + 1];
-//                Hn[mm + 1][rowNumb82 + pipeSegments[i]] = Hn[mm + 1][rowNumb82 + pipeSegments[i] - 1] * (dx + 2 * dxn[i]) / (dx + dxn[i]) - Hn[mm + 1][rowNumb82 + pipeSegments[i] - 2] * dxn[i] / (dx + dxn[i]);
-//
-//                rowNumb82 += pipeSegments[i] + 2;
-//                rowNumb83 += pipeSegments[i];
-//            }
-//
-//            //给阀门两端节点的Qn与Hn赋值
-//            int rowNumb84 = sum + pipeCount;
-//            int rowNumb85 = 2*sum + pipeCount;
-//            int rowNumb86 = sum + 2*pipeCount;
-//            for (int i = 0; i < valveCount; i++) {
-//                Qn[mm + 1][rowNumb84] = result.get(rowNumb85,0);
-//                Qn[mm + 1][rowNumb84 + 1] = result.get(rowNumb85 + 2,0);
-//                Hn[mm + 1][rowNumb86] = result.get(rowNumb85 + 1,0);
-//                Hn[mm + 1][rowNumb86 + 1] = result.get(rowNumb85 + 3,0);
-//                rowNumb84 += 2;
-//                rowNumb86 += 2;
-//                rowNumb85 += 4;
-//            }
-
-            /*结果优化输出*/
+            /*管段Qn\Hn赋值的行列编号*/
+            int rowNumbForAssignPipeQn = 0;     //管段Qn行编号
+            int rowNumbForAssignPipeHn = 1;     //管段Hn行编号
+            int rowNumbForPipeResult = sum + pipeCount + 2*valveCount;      //计算结果中管段Hn行编号
             /*给管段所有分段节点的Qn与Hn赋值*/
             for (int i = 0; i < pipeCount; i++) {
                 for (int j = 0; j < pipeSegments[i] + 1; j++) {
-                    Qn[mm + 1][rowNumb81 + j] = oldResult.get(rowNumb81 + j,0);
+                    Qn[mm + 1][rowNumbForAssignPipeQn + j] = result.get(rowNumbForAssignPipeQn + j,0);
                 }
-                rowNumb81 += pipeSegments[i] + 1;
+                rowNumbForAssignPipeQn += pipeSegments[i] + 1;
                 for (int j = 0; j < pipeSegments[i]; j++) {
-                    Hn[mm + 1][rowNumb82 + j] = oldResult.get(rowNumb83 + j,0);
+                    Hn[mm + 1][rowNumbForAssignPipeHn + j] = result.get(rowNumbForPipeResult + j,0);
                 }
-                Hn[mm + 1][rowNumb82 - 1] = 1.5 * Hn[mm + 1][rowNumb82] - 0.5 * Hn[mm + 1][rowNumb82 + 1];
-                Hn[mm + 1][rowNumb82 + pipeSegments[i]] = Hn[mm + 1][rowNumb82 + pipeSegments[i] - 1] * (dx + 2 * dxn[i]) / (dx + dxn[i]) - Hn[mm + 1][rowNumb82 + pipeSegments[i] - 2] * dxn[i] / (dx + dxn[i]);
+                Hn[mm + 1][rowNumbForAssignPipeHn - 1] = 1.5 * Hn[mm + 1][rowNumbForAssignPipeHn] - 0.5 * Hn[mm + 1][rowNumbForAssignPipeHn + 1];
+                Hn[mm + 1][rowNumbForAssignPipeHn + pipeSegments[i]] = Hn[mm + 1][rowNumbForAssignPipeHn + pipeSegments[i] - 1] * (dx + 2 * dxn[i]) / (dx + dxn[i]) - Hn[mm + 1][rowNumbForAssignPipeHn + pipeSegments[i] - 2] * dxn[i] / (dx + dxn[i]);
 
-                rowNumb82 += pipeSegments[i] + 2;
-                rowNumb83 += pipeSegments[i];
+                rowNumbForAssignPipeHn += pipeSegments[i] + 2;
+                rowNumbForPipeResult += pipeSegments[i];
             }
 
-            //给阀门两端节点的Qn与Hn赋值
-            int rowNumb84 = sum + pipeCount;
-            int rowNumb85 = 2*sum + pipeCount;
-            int rowNumb86 = sum + 2*pipeCount;
-            for (int i = 0; i < valveCount; i++) {
-                Qn[mm + 1][rowNumb84] = oldResult.get(rowNumb85,0);
-                Qn[mm + 1][rowNumb84 + 1] = oldResult.get(rowNumb85 + 2,0);
-                Hn[mm + 1][rowNumb86] = oldResult.get(rowNumb85 + 1,0);
-                Hn[mm + 1][rowNumb86 + 1] = oldResult.get(rowNumb85 + 3,0);
-                rowNumb84 += 2;
-                rowNumb86 += 2;
-                rowNumb85 += 4;
-            }
+            /*阀门Qn\Hn赋值的行列编号*/
+//            int rowNumbForAssignValveQn = sum + pipeCount;      //阀门Qn行编号
+//            int rowNumbForAssignValveHn = sum + 2*pipeCount;     //阀门Hn行编号
+//            int rowNumbForValveResult = 2*sum + pipeCount + 2*valveCount;       //计算结果中阀门Hn行编号
+//            /*给阀门两端节点的Qn与Hn赋值*/
+//            for (int i = 0; i < valveCount; i++) {
+//                Qn[mm + 1][rowNumbForAssignValveQn] = result.get(rowNumbForAssignValveQn,0);
+//                Qn[mm + 1][rowNumbForAssignValveQn + 1] = result.get(rowNumbForAssignValveQn + 1,0);
+//                Hn[mm + 1][rowNumbForAssignValveHn] = result.get(rowNumbForValveResult,0);
+//                Hn[mm + 1][rowNumbForAssignValveHn + 1] = result.get(rowNumbForValveResult + 1,0);
+//                rowNumbForAssignValveQn += 2;
+//                rowNumbForAssignValveHn += 2;
+//                rowNumbForValveResult += 2;
+//            }
 
             long endTime3 = System.currentTimeMillis();
             System.out.println("给下一时步赋值计算时间:" + (endTime3 - startTime3));
@@ -1053,68 +1021,44 @@ public class FixedFunctionsNew implements Serializable {
             }
         }
 
-//        int numb = 1;
-//        Map<String,Double> QQ = new HashMap<>();
+//        long startTime4 = System.currentTimeMillis();
+//        /*获取每个节点的压力*/
+//        int numb1 = 1;
+//        int numb2 = -1;
+//        Map<String,Double> HH = new HashMap<>();
 //        for (int i = 0; i < pipeCount; i++) {
-//            System.out.println("第"+(i+1)+"段管段的管段数为:" + pipeSegments[i]);
-//            System.out.println("第"+(i+1)+"段管段的入口分段编号为:" + numb);
+//            numb2 = numb2 + pipeSegments[i] + 2;
+//
 //            //管段入口节点编号
 //            String pipeInNumb = String.valueOf(pipes.get(i).getStartId());
-//            double Q = Qn[time][numb-1];
+//            //管段出口节点编号
+//            String pipeOutNumb = String.valueOf(pipes.get(i).getEndId());
 //
-//            if ( !QQ.containsKey(pipeInNumb) ){
-//                QQ.put(pipeInNumb,Q);
+//            double H1 = Hn[times][numb1-1];
+//            double H2 = Hn[times][numb2];
+//
+//            if ( !HH.containsKey(pipeInNumb) ){
+//                HH.put(pipeInNumb,H1);
+//            }
+//            if ( !HH.containsKey(pipeOutNumb) ){
+//                HH.put(pipeOutNumb,H2);
 //            }
 //
-//            numb = numb + pipeSegments[i] + 1;
+//            numb1 = numb1 + pipeSegments[i] + 2;
 //        }
-//        System.out.println(QQ);
 //
-//        //节点流量(各管段入口)
-//        double[] Qin = new double[nodes.size()];
+//        //节点压力(各管段入口)
+//        double[] Hin = new double[nodes.size()];
 //        for (int i = 0; i < nodes.size(); i++) {
 //            String key = String.valueOf(i+1);
-//            Qin[i] = QQ.get(key);
+//            if ( HH.containsKey(key) ){
+//                Hin[i] = HH.get(key);
+//            }
 //        }
-
-        long startTime4 = System.currentTimeMillis();
-        /*获取每个节点的压力*/
-        int numb1 = 1;
-        int numb2 = -1;
-        Map<String,Double> HH = new HashMap<>();
-        for (int i = 0; i < pipeCount; i++) {
-            numb2 = numb2 + pipeSegments[i] + 2;
-
-            //管段入口节点编号
-            String pipeInNumb = String.valueOf(pipes.get(i).getStartId());
-            //管段出口节点编号
-            String pipeOutNumb = String.valueOf(pipes.get(i).getEndId());
-
-            double H1 = Hn[times][numb1-1];
-            double H2 = Hn[times][numb2];
-
-            if ( !HH.containsKey(pipeInNumb) ){
-                HH.put(pipeInNumb,H1);
-            }
-            if ( !HH.containsKey(pipeOutNumb) ){
-                HH.put(pipeOutNumb,H2);
-            }
-
-            numb1 = numb1 + pipeSegments[i] + 2;
-        }
-
-        //节点压力(各管段入口)
-        double[] Hin = new double[nodes.size()];
-        for (int i = 0; i < nodes.size(); i++) {
-            String key = String.valueOf(i+1);
-            if ( HH.containsKey(key) ){
-                Hin[i] = HH.get(key);
-            }
-        }
-
-        long endTime4 = System.currentTimeMillis();
-        System.out.println("计算结束获取结果时间:" + (endTime4 - startTime4));
-
+//
+//        long endTime4 = System.currentTimeMillis();
+//        System.out.println("计算结束获取结果时间:" + (endTime4 - startTime4));
+//
         for (int i = 0; i < times; i++) {
             System.out.println("直接求解法第" + i + "次的计算时间" + it1[i]);
         }
@@ -1124,12 +1068,6 @@ public class FixedFunctionsNew implements Serializable {
 
         SimpleMatrix matrixA = new SimpleMatrix(matrix);
 
-        //将优化过后的B输出
-        double[][] BB = new double[sum*2 + pipeCount + 4*valveCount][1];
-        for (int i = 0; i < BB.length; i++) {
-            BB[i][0] = B[i];
-        }
-
         this.matrixNewBee = matrixNew;
         this.Xout = Xout;
         this.Hin = Hin;
@@ -1138,23 +1076,10 @@ public class FixedFunctionsNew implements Serializable {
         this.b = b;
         this.connections = connections;
         this.matrix = matrix;
-        this.simpleMatrixA = matrixA;
+//        this.simpleMatrixA = matrixA;
         this.pipeLength = pipeLength;
         this.pipeSegments = pipeSegments;
         this.pipeSegmentsLength = pipeSegmentsLength;
     }
 
-    public void nodeType(NetWork netWork){
-
-
-    }
-
-    protected void addDiagonal(Matrix A, double shift) {
-        int n = A.numRows(), m = A.numColumns();
-        for (int i = 0; i < Math.min(n, m); ++i){
-            if (A.get(i,i) == 0){
-                A.set(i, i, shift);
-            }
-        }
-    }
 }

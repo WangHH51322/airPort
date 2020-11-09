@@ -9,6 +9,7 @@ import com.cup.wang.airport.model.Valve;
 import com.cup.wang.airport.simulator.others.ExcelInput;
 import com.cup.wang.airport.simulator.others.MatrixSolver;
 import com.cup.wang.airport.simulator.simulate.FixedFunctions;
+import com.cup.wang.airport.simulator.simulate.FixedFunctionsNew;
 import com.cup.wang.airport.simulator.simulate.NetWork;
 import no.uib.cipr.matrix.*;
 import no.uib.cipr.matrix.sparse.*;
@@ -51,11 +52,14 @@ class AirportApplicationTests {
         System.out.println("从数据库获取数据时间:" + (endTime1 - startTime1));
 
         long startTime = System.currentTimeMillis();
-        FixedFunctions fixedFunctions = new FixedFunctions();
-        fixedFunctions.setDx(10.0);
-        fixedFunctions.setDt(1.0);
+        FixedFunctionsNew fixedFunctions = new FixedFunctionsNew();
+        fixedFunctions.setQ0(80.0);
+        fixedFunctions.setH0(80.0);
+//        FixedFunctions fixedFunctions = new FixedFunctions();
+        fixedFunctions.setDx(18.0);
+        fixedFunctions.setDt(200.0);
         fixedFunctions.setA(1214.0);
-        fixedFunctions.setT(21);
+        fixedFunctions.setT(1400);
 
         fixedFunctions.setCoefficientMatrix(netWork);
 
@@ -63,14 +67,14 @@ class AirportApplicationTests {
         double[][] b = fixedFunctions.getB();
         double[][] Qn = fixedFunctions.getQn();
         double[][] Hn = fixedFunctions.getHn();
-        double[] Hin = fixedFunctions.getHin();
+//        double[] Hin = fixedFunctions.getHin();
         double[][] Xout = fixedFunctions.getXout();
-        double[][] Anew = fixedFunctions.getMatrixNewBee();
-
-        long endTime = System.currentTimeMillis();
-        System.out.println("计算时间:" + (endTime - startTime));
-
-        long startTime3 = System.currentTimeMillis();
+//        double[][] Anew = fixedFunctions.getMatrixNewBee();
+//
+//        long endTime = System.currentTimeMillis();
+//        System.out.println("计算时间:" + (endTime - startTime));
+//
+//        long startTime3 = System.currentTimeMillis();
         /*excel*/
         String filePath = "D:\\zexcel\\121.xlsx";
         SXSSFWorkbook sxssfWorkbook = null;
@@ -84,9 +88,9 @@ class AirportApplicationTests {
             SXSSFSheet sheetB = sxssfWorkbook.getSheetAt(1);
             SXSSFSheet sheetQn = sxssfWorkbook.getSheetAt(2);
             SXSSFSheet sheetHn = sxssfWorkbook.getSheetAt(3);
-            SXSSFSheet sheetHin = sxssfWorkbook.getSheetAt(4);
+//            SXSSFSheet sheetHin = sxssfWorkbook.getSheetAt(4);
             SXSSFSheet sheetXout = sxssfWorkbook.getSheetAt(5);
-            SXSSFSheet sheetAnew = sxssfWorkbook.getSheetAt(6);
+//            SXSSFSheet sheetAnew = sxssfWorkbook.getSheetAt(6);
             for (int z = 0; z < matrix.length; z++) {
                 SXSSFRow row = sheet.createRow(z);
                 for (int j = 0; j < matrix[z].length; j++) {
@@ -111,22 +115,22 @@ class AirportApplicationTests {
                     row.createCell(j).setCellValue(Hn[z][j]);
                 }
             }
-            SXSSFRow row1 = sheetHin.createRow(0);
-            for (int z = 0; z < Hin.length; z++) {
-                row1.createCell(z).setCellValue(Hin[z]);
-            }
+//            SXSSFRow row1 = sheetHin.createRow(0);
+//            for (int z = 0; z < Hin.length; z++) {
+//                row1.createCell(z).setCellValue(Hin[z]);
+//            }
             for (int z = 0; z < Xout.length; z++) {
                 SXSSFRow row = sheetXout.createRow(z);
                 for (int j = 0; j < Xout[z].length; j++) {
                     row.createCell(j).setCellValue(Xout[z][j]);
                 }
             }
-            for (int z = 0; z < Anew.length; z++) {
-                SXSSFRow row = sheetAnew.createRow(z);
-                for (int j = 0; j < Anew[z].length; j++) {
-                    row.createCell(j).setCellValue(Anew[z][j]);
-                }
-            }
+//            for (int z = 0; z < Anew.length; z++) {
+//                SXSSFRow row = sheetAnew.createRow(z);
+//                for (int j = 0; j < Anew[z].length; j++) {
+//                    row.createCell(j).setCellValue(Anew[z][j]);
+//                }
+//            }
             outputStream = new BufferedOutputStream(new FileOutputStream(filePath));
             sxssfWorkbook.write(outputStream);
             outputStream.flush();
@@ -142,8 +146,8 @@ class AirportApplicationTests {
                 }
             }
         }
-        long endTime3 = System.currentTimeMillis();
-        System.out.println("导出excel时间:" + (endTime3 - startTime3));
+//        long endTime3 = System.currentTimeMillis();
+//        System.out.println("导出excel时间:" + (endTime3 - startTime3));
     }
 
     /**

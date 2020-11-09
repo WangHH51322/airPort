@@ -141,6 +141,7 @@ public class FixedFunctions implements Serializable {
                         pipeSegmentsLength[i][j] = dx;
                     }
                 }
+                dxn[i] = dx + dxn[i];
             } else {
                 pipeSegments[i] = n+1;
                 pipeSegmentsLength[i] = new double[pipeSegments[i]];
@@ -767,7 +768,7 @@ public class FixedFunctions implements Serializable {
             }
 
 
-            if (mm < 20){
+            if (mm < 20000){
 
                 /*未优化直接求解*/
 //                long startTime = System.currentTimeMillis();
